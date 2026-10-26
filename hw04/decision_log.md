@@ -29,6 +29,8 @@ Counts in entries 1–5 are on the raw data. Later entries leave out the 200 orp
 | 17 | [Selling more shares than bought](#17-selling-more-shares-than-bought) | WARN | Leave as is |
 | 18 | [Inactive clients still transacting](#18-inactive-clients-still-transacting) | WARN | Flag |
 | 19 | [AUM does not include deposits or withdrawals](#19-aum-does-not-include-deposits-or-withdrawals) | WARN | Leave as is |
+| 20 | [Blanks that are correct by design](#20-blanks-that-are-correct-by-design) | INFO | Leave as is |
+| 21 | [Dividend amount is the holding value](#21-dividend-amount-is-the-holding-value) | INFO | Leave as is |
 
 ## Major issues (ERROR findings)
 
@@ -242,3 +244,27 @@ Counts in entries 1–5 are on the raw data. Later entries leave out the 200 orp
 | **Decision** | **Leave as is**: don't change AUM or the transactions. Use AUM for balances, returns and fees; use deposits and withdrawals only as cash-flow figures. Don't add them to AUM or use them to explain AUM changes. |
 | **Justification** | AUM agrees with the rest of the data (return, alpha and fees all match it), so changing it would break that. In a real firm, deposits and withdrawals would change AUM, so one of the two tables is probably incomplete, but the data can't tell us which. A clear usage rule avoids misleading results without changing any data. |
 | **Risk** | If AUM should include cash flows, account sizes, AUM totals and the fees calculated from them are off by each client's net deposits (about $327M in total). Anyone combining the two tables will get results that don't add up. |
+
+## INFO findings (legitimate structure)
+
+### 20. Blanks that are correct by design
+
+| Field | Detail |
+|---|---|
+| **Table / column** | `dim_security.sector`, `dim_security.expense_ratio_bps`, `fact_transactions.security_id` / `shares` / `price` |
+| **Evidence** | [DQ149, DQ162, DQ264, DQ276, DQ280, DQ377] Each blank lines up exactly with a type of row that shouldn't have a value. **Sector:** 219 blanks, and these are exactly the 219 non-equities (120 Fixed Income, 58 Alternative, 41 Cash Equivalent). **Expense ratio:** 281 blanks, exactly the 281 non-ETFs; all 219 ETFs have one. **Security, shares and price:** 101,528 rows are blank in all three, and these are exactly the 101,528 deposits, withdrawals and Advisory Fees. No Buy, Sell or Dividend is missing any of the three. |
+| **Dimension violated** | None. Completeness looks low, but the structure is legitimate. |
+| **Decision** | **Leave as is**: keep the blanks and treat them as "not applicable", never as 0 or missing. |
+| **Justification** | Only equities belong to a sector, only ETFs charge an expense ratio, and cash movements don't involve a security. Filling these blanks would invent values that don't exist (e.g. a "sector" for a bond fund, or a price for a deposit). The validation script confirms the rule on both raw and clean data. |
+| **Risk** | If a BI tool or a default `pd.read_csv` treats these blanks as 0, averages go wrong; for example, the average expense ratio would include 281 zeros. `README_clean.md` tells BI users to treat them as null. |
+
+### 21. Dividend amount is the holding value
+
+| Field | Detail |
+|---|---|
+| **Table / column** | `fact_transactions.amount` (Dividend rows) |
+| **Evidence** | [DQ341] For all 53,826 dividends, amount = shares × price exactly, e.g. txn 1: 455.1138 shares × $147.90 = $67,311.33. That's the value of the holding, not the cash paid out. Dividends total $3,449.3M over five years, and the median dividend ($48,816) is about the same as the median Buy ($47,888). Real dividends are usually a few percent of the holding value per year. |
+| **Dimension violated** | Accuracy/Plausibility |
+| **Decision** | **Leave as is**: keep the amounts. Don't add up dividend amounts as income. |
+| **Justification** | The data contains no dividend rate or yield, so the real cash dividend can't be worked out. Any correction (e.g. applying an assumed yield) would invent data. The rows are still useful for counting dividend events and which securities paid them. |
+| **Risk** | If dividend amounts are added up as income, client income is overstated enormously. `README_clean.md` lists this as a known limitation. |
