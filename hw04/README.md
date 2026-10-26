@@ -15,10 +15,13 @@ hw04/
 │   └── fact_transactions.csv
 ├── scripts/
 │   ├── 01_profile.py         # profiles every column and runs the data-quality checks
-│   └── 02_clean.py           # applies the decisions in decision_log.md
+│   ├── 02_clean.py           # applies the decisions in decision_log.md
+│   └── 03_validate.py        # validates raw and clean tables and builds the scorecard
 ├── reports/
-│   ├── profile_raw.csv       # one row per column: what the data looks like
-│   └── dq_summary_raw.csv    # one row per check: PASS or FINDING, tagged ERROR / WARN / INFO
+│   ├── profile_raw.csv              # one row per column: what the data looks like
+│   ├── dq_summary_raw.csv           # one row per check: PASS or FINDING, tagged ERROR / WARN / INFO
+│   ├── data_quality_scorecard.csv   # one row per table per stage (raw / clean): five quality scores
+│   └── validation_details.csv       # every individual check behind the scorecard
 ├── decision_log.md           # one entry per issue: evidence, decision, justification, risk
 └── data/
     ├── clean/                # the 8 cleaned tables (same names and columns, plus 0/1 flag columns)
@@ -51,6 +54,15 @@ The profiling and generic checks work on any folder of CSVs. The Wildcat Capital
 4. Moves removed rows to quarantine files and proves raw rows = clean rows + quarantined rows for every table.
 5. Saves the clean tables, the audit trail and `README_clean.md`.
 
+**What `03_validate.py` does**
+
+1. Reads the raw and the clean tables as text and runs the same checks on both.
+2. **Referential integrity:** a reusable function, `check_referential_integrity(fact_df, fact_key, dim_df, dim_key)`, returns the match rate, orphan rows, distinct orphan keys and null-key rate. It is applied to all 13 relationships: 10 ID-based ones and 3 date joins to `dim_date`.
+3. **Business rules:** 48 checks on columns with a natural limit: ranges (e.g. age 18–110), allowed code lists (e.g. state codes, account types) and sign rules (e.g. shares > 0).
+4. **Reconciliations:** recomputes values and compares them with what is stored, e.g. fee amount = AUM × rate ÷ 12, alpha = return − benchmark, trade amount = shares × price, fee AUM = snapshot AUM. One reconciliation (Advisory Fee transactions vs `fact_fees`) is expected to fail: it is the known limitation in decision #15.
+5. **IQR outliers** on snapshot AUM, trade amount and initial AUM. Flagged does not mean wrong: almost every flagged AUM belongs to a UHNW client whose account is legitimately large.
+6. Saves `data_quality_scorecard.csv`: one row per table per stage, with % completeness, % key uniqueness, % type validity, % rule pass and % referential match.
+
 ## How to run
 
 From the repository root (`mis3060-bi-ai`), in the VS Code terminal:
@@ -59,12 +71,7 @@ From the repository root (`mis3060-bi-ai`), in the VS Code terminal:
 python3 hw04/scripts/01_profile.py
 ```
 
-Optional:
 
-```bash
-python3 hw04/scripts/01_profile.py --data path/to/folder   # profile any folder of CSVs
-python3 hw04/scripts/01_profile.py a.csv b.csv             # profile specific files
-```
 
 Requires `pandas` and `numpy` (see `requirements.txt`). It takes about 40 seconds and writes both reports to `hw04/reports/`. On the raw data it runs 384 checks: 38 findings (6 ERROR, 17 WARN, 15 INFO) and 346 passes.
 
@@ -75,6 +82,14 @@ python3 hw04/scripts/02_clean.py
 ```
 
 It takes about 15 seconds and writes to `hw04/data/clean/` and `hw04/data/audit/`. It is safe to run again: it always starts from the raw files and overwrites its own outputs. It ends with `Done: 28 log entries, 198,345 value changes, 225 rows quarantined.`
+
+Then run the validation script:
+
+```bash
+python3 hw04/scripts/03_validate.py
+```
+
+It takes about 20 seconds and writes both reports to `hw04/reports/`. It reads the clean files, so run `02_clean.py` first. On the clean data every table scores 100% on all five scorecard measures.
 
 ## Claude Code findings
 
@@ -90,7 +105,7 @@ Claude Code suggested one improvement:
 
 ### `02_clean.py`
 
-**Result: no active bugs flagged.**
+**Result: no issues flagged.**
 
 Claude Code pointed out some hidden assumptions. They are true for this dataset, but the script doesn't re-check them:
 
@@ -99,3 +114,15 @@ Claude Code pointed out some hidden assumptions. They are true for this dataset,
   - In `step_risk_profile`, the check that blank-profile clients only use the default benchmark only looks at clients who have snapshots. A blank-profile client with no snapshots would pass the check without actually being examined.
 - **Suggested fix:** add explicit checks for these assumptions before the steps that rely on them, so problems in future data stop the script with a clear message.
 - **What I did:** no change. These assumptions all hold for this dataset, every check passed, and the script performed as intended on all eight files, so the change wasn't needed for this assignment.
+
+### `03_validate.py`
+
+**Result: no blocking issues flagged.**
+
+Claude Code pointed out two minor points:
+
+- **What it noticed:**
+  - `pct_referential_match` in the scorecard is an average across all of a table's relationships, not shown separately for each one. That fits the "one row per table" format, but the score for each relationship is only visible in `validation_details.csv`.
+  - Two parts of the code (the note calculation in `iqr_flags` and the type handling in `check_referential_integrity`) work correctly but are written in a slightly roundabout way. They're worth a second look if they are extended in Assignment 5.
+- **Suggested fix:** none required; just be aware of these if more detail is needed or the function is reused.
+- **What I did:** no change. The script ran correctly on both the raw and clean data and produced the scorecard as intended, so the change wasn't needed for this assignment.
