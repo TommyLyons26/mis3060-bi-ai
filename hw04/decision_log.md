@@ -52,7 +52,7 @@ Counts in entries 1–5 are on the raw data. Later entries leave out the 200 orp
 | **Dimension violated** | Validity, Consistency |
 | **Decision** | **Convert**: for values ending in "%", remove the % and divide by 100 ("9.28%" → 0.0928). Leave the other rows as they are, then make the whole column numeric. |
 | **Justification** | YTD return is the main performance measure for clients and advisors. Losing these 300 rows would skew averages. Removing the % without dividing by 100 would turn 9.28% into 928%. As a check: return − benchmark return = alpha holds for every row, and after the fix it holds for these 300 rows too. That confirms dividing by 100 is correct. |
-| **Risk** | Low. If some "%" values were already in decimal form, they would end up 100× too small, but the alpha check shows they weren't. The percentages only have 2 decimal places, so a small amount of precision is lost. |
+| **Risk** | Low. If some "%" values were already in decimal form, they would end up 100× too small, but the alpha check shows they weren't. The percentages were cut off (not rounded) at 2 decimal places, so each converted value can be up to 0.0001 out. |
 
 ### 3. Security IDs stored as "45.0"
 
@@ -72,7 +72,7 @@ Counts in entries 1–5 are on the raw data. Later entries leave out the 200 orp
 | **Table / column** | `fact_transactions.shares` |
 | **Evidence** | [DQ339] 836 of 83,556 Buys (1.0%) have negative shares, e.g. txn 272: Buy, shares −261.9719, price $441.71, amount $115,715.61. All 59,755 Sells and all other Buys have positive shares. In all 836 rows, amount = shares × price when the minus sign is ignored. (One of the 836 is an orphan copy removed in #5, leaving 835.) |
 | **Dimension violated** | Validity, Consistency |
-| **Decision** | **Standardize + flag**: remove the minus sign, and add a column `shares_sign_fixed = True` on these 836 rows so they can be traced. |
+| **Decision** | **Standardize + flag**: remove the minus sign, and add a column `shares_sign_fixed = 1` on these 836 rows so they can be traced. |
 | **Justification** | In this data, `txn_type` (Buy or Sell) says which way a trade went; the shares are always positive. The amount is positive and matches the shares without the minus sign, so the minus sign is the only part of the row that doesn't fit. Fixing it keeps $52.0M of real purchases counted correctly instead of treating them as sales. |
 | **Risk** | Medium. If these were actually Sells labelled as Buys, the fix records them the wrong way round, which would distort position and cash-flow figures. The flag column lets the business review them and undo the change if needed. |
 
@@ -107,7 +107,7 @@ Counts in entries 1–5 are on the raw data. Later entries leave out the 200 orp
 | **Table / column** | `dim_client.risk_profile` |
 | **Evidence** | [DQ063, DQ352] 76 of 2,525 clients (3.0%) have a blank risk profile; 75 of them are real clients with activity. No other column (tier, age, account type) predicts the missing value. All 75 were given benchmark 3 (60/40 Blend) across 3,942 snapshots, which looks like a system default. |
 | **Dimension violated** | Completeness |
-| **Decision** | **Fill + flag**: replace blank with "Unknown" and add `risk_profile_missing = True`. Keep their benchmark as is. |
+| **Decision** | **Fill + flag**: replace blank with "Unknown" and add `risk_profile_missing = 1`. Keep their benchmark as is. |
 | **Justification** | Risk profile decides which benchmark a client is measured against. Guessing "Balanced" would hide a real gap, and leaving blanks risks these clients dropping out of reports. "Unknown" keeps them visible and honest, and the flag shows the business which clients need a profile collected. |
 | **Risk** | Reports grouped by risk profile will show an extra "Unknown" group of 75 clients. Their performance vs. benchmark (alpha) should be treated with caution, since we don't know if 60/40 Blend is the right comparison for them. |
 
@@ -151,7 +151,7 @@ Counts in entries 1–5 are on the raw data. Later entries leave out the 200 orp
 | **Table / column** | `fact_portfolio_snapshot.aum` and `fact_fees.aum_basis` |
 | **Evidence** | [DQ334, DQ330] 420 snapshots (92 clients, all Retail) show AUM of exactly $1,000.00, and no snapshot is ever below $1,000. Accounts usually crash into it in one month (median −86%) while their benchmark moved only between −5% and +6% that month. Example: client 1026 went from $33,870.66 to $1,000.00 in July 2022. 386 fees were charged on this $1,000 ($0.65–$0.80 each). The true balance can't be worked out: the return was calculated from the $1,000, so recalculating always gives $1,000 again. |
 | **Dimension violated** | Accuracy/Plausibility |
-| **Decision** | **Flag**: keep the rows and add `aum_at_floor = True` to the 420 snapshots and the 386 fees. Leave flagged rows out of return and fee-rate analysis. |
+| **Decision** | **Flag**: keep the rows and add `aum_at_floor = 1` to the 420 snapshots and the 386 fees. Leave flagged rows out of return and fee-rate analysis. |
 | **Justification** | $1,000 looks like a minimum the data was set to, not a real balance. Deleting the rows would leave gaps in clients' monthly history, and inventing a "correct" value would be a guess. Flagging keeps the history while stopping fake values from skewing averages. |
 | **Risk** | If $1,000 were a real minimum balance (e.g. a firm policy), excluding these rows would leave out genuine small accounts. They are only 0.3% of snapshots, so totals barely change either way. |
 
@@ -162,7 +162,7 @@ Counts in entries 1–5 are on the raw data. Later entries leave out the 200 orp
 | **Table / column** | `fact_portfolio_snapshot.return_ytd` (and `active_alpha_ytd`) |
 | **Evidence** | [DQ333] 1,475 snapshots (178 clients, all Retail) have a YTD return below −90% or above +100%, up to +9,467%. Benchmarks only ranged from −24% to +27%. There are 797 one-month moves bigger than ±50%, while the benchmark moved at most 6%. Example: client 29 went from $9,105 to $52,090 in July 2022 (+287% YTD) while the market fell. 249 of these rows are also at the $1,000 floor (#11), and recoveries from the floor create the largest values. |
 | **Dimension violated** | Accuracy/Plausibility |
-| **Decision** | **Flag**: add `return_extreme = True` to these 1,475 rows. Leave them out of return, alpha and advisor-performance averages. Keep their AUM for fee and balance reporting. |
+| **Decision** | **Flag**: add `return_extreme = 1` to these 1,475 rows. Leave them out of return, alpha and advisor-performance averages. Keep their AUM for fee and balance reporting. |
 | **Justification** | Returns this far from the benchmark only happen with very risky portfolios (one stock, leverage). Most of these clients (131 of 178) are Conservative, Moderately Conservative or Balanced, and HNW/UHNW clients never show it; they stay within about ±14% of their benchmark. A few of these values can make average performance meaningless. Flagging keeps the full monthly history and lets analysts choose to include or exclude them. |
 | **Risk** | If some jumps were real (e.g. a small account holding one stock that soared), excluding them would understate those clients' performance. Only 1.1% of snapshots are flagged, so overall averages become more reliable, not less. |
 
@@ -184,7 +184,7 @@ Counts in entries 1–5 are on the raw data. Later entries leave out the 200 orp
 | **Table / column** | `fact_portfolio_snapshot` ↔ `fact_fees` |
 | **Evidence** | [DQ357] 7,350 of 129,547 snapshot months (5.7%) have no matching fee in `fact_fees`. 2,261 of 2,500 clients are missing at least one month, usually 1–4. The gaps are spread evenly across tiers, years and calendar months, are mostly single months, and aren't linked to new clients, departing clients or the $1,000 floor. |
 | **Dimension violated** | Completeness |
-| **Decision** | **Flag**: add `fee_missing = True` to these 7,350 snapshots. Leave `fact_fees` as it is. |
+| **Decision** | **Flag**: add `fee_missing = 1` to these 7,350 snapshots. Leave `fact_fees` as it is. |
 | **Justification** | The gaps look like fee records that were lost or never recorded, not deliberate waivers, which would cluster (e.g. new clients or one tier). Inventing fees would mean guessing the rate and fee type. Flagging keeps the fee table factual and lets revenue reports state that ~5.7% of months have no fee record. |
 | **Risk** | Revenue from `fact_fees` is understated, roughly $17.9M over five years at the average rate (an estimate). If some gaps were real waivers, flagging them as "missing" overstates the problem, but nothing in the data is changed. |
 
@@ -206,7 +206,7 @@ Counts in entries 1–5 are on the raw data. Later entries leave out the 200 orp
 | **Table / column** | `fact_transactions.txn_date` (Buy/Sell) ↔ `dim_date.is_trading_day` |
 | **Evidence** | [DQ359] 40,630 of 143,218 Buys and Sells (28.4%) fall on a Saturday or Sunday, when markets are closed. Trades are spread evenly across all 7 days (~14.3% each), which is exactly what random dates would give, and all 2,500 clients are affected. Deposits, withdrawals, dividends and fees show the same ~28%. Note: `dim_date` has no public holidays, so it only marks weekends as non-trading days. |
 | **Dimension violated** | Accuracy/Plausibility |
-| **Decision** | **Flag**: add `non_trading_day = True` to these 40,630 trades. Keep the dates as they are. |
+| **Decision** | **Flag**: add `non_trading_day = 1` to these 40,630 trades. Keep the dates as they are. |
 | **Justification** | The dates look randomly generated, not recorded on real trading days. Moving them to the next Monday would mean inventing dates and could push trades into the next month. Monthly and yearly figures are unaffected, and the flag lets daily analysis (e.g. trades by day of week) filter these rows out. |
 | **Risk** | If kept in daily analysis, reports would show trading on days the market was closed. Because the calendar has no holidays, some trades on holidays are not flagged, so the true number of non-trading-day trades is slightly higher. |
 
@@ -228,7 +228,7 @@ Counts in entries 1–5 are on the raw data. Later entries leave out the 200 orp
 | **Table / column** | `fact_transactions` ↔ `dim_client.is_active` / `fact_portfolio_snapshot` |
 | **Evidence** | [DQ362] 175 clients are inactive: their snapshots and fees stop between Dec 2022 and Nov 2023. Yet 2,410 of their transactions (131 clients) are dated 1–12 months after their last snapshot, including 689 Buys and 278 Deposits ($13.4M deposited, $11.8M withdrawn, $1.9M in fees). All of them stop by the end of 2023. |
 | **Dimension violated** | Consistency |
-| **Decision** | **Flag**: add `after_account_closed = True` to these 2,410 transactions. Keep the rows. |
+| **Decision** | **Flag**: add `after_account_closed = 1` to these 2,410 transactions. Keep the rows. |
 | **Justification** | The snapshot table and the transactions table disagree on when these accounts closed. A few final sells and withdrawals would be normal when a client leaves, but new Buys and Deposits a year later are not. Flagging keeps the possible closing transactions while letting reports on activity or active clients leave these rows out. |
 | **Risk** | If the snapshots stopped too early and these clients were really still active, excluding the flagged rows would understate their activity. If kept in, closed clients look active and activity is overstated. |
 
