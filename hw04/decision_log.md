@@ -186,7 +186,7 @@ Counts in entries 1–5 are on the raw data. Later entries leave out the 200 orp
 | **Dimension violated** | Completeness |
 | **Decision** | **Flag**: add `fee_missing = 1` to these 7,350 snapshots. Leave `fact_fees` as it is. |
 | **Justification** | The gaps look like fee records that were lost or never recorded, not deliberate waivers, which would cluster (e.g. new clients or one tier). Inventing fees would mean guessing the rate and fee type. Flagging keeps the fee table factual and lets revenue reports state that ~5.7% of months have no fee record. |
-| **Risk** | Revenue from `fact_fees` is understated, roughly $17.9M over five years at the average rate (an estimate). If some gaps were real waivers, flagging them as "missing" overstates the problem, but nothing in the data is changed. |
+| **Risk** | Revenue from `fact_fees` is understated, because 7,350 of 129,547 months (5.7%) have no fee recorded. If some gaps were real waivers, flagging them as "missing" overstates the problem, but nothing in the data is changed. |
 
 ### 15. Fee transactions vs the fee table
 

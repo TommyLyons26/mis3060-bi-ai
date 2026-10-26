@@ -5,13 +5,13 @@
 
 ## Executive summary
 
-The data is in good shape overall: most tables needed no changes. We found **5 clear errors** and **14 warnings**. Every error has been fixed or removed. Warnings were either fixed, flagged for analysts, or documented as limitations. Nothing was deleted without a record: the **225 rows removed** (25 duplicate clients and 200 copied transactions) are kept in quarantine files and can be restored.
+The data is in good shape overall: the advisor, benchmark and calendar tables needed no changes, and most problems affected only a small share of rows. We found **5 clear errors** and **14 warnings**. Every error has been fixed or removed. Warnings were either fixed, flagged for analysts, or documented as limitations. Nothing was deleted without a record: the **225 rows removed** (25 duplicate clients and 200 copied transactions) are kept in quarantine files and can be restored.
 
-After cleaning, **all eight tables score 100%** on completeness, key uniqueness, type validity, business rules and referential integrity. Before cleaning, the transactions table could not be linked to securities at all.
+After cleaning, **all eight tables score 100%** on completeness, key uniqueness, type validity and business rules, and the five tables that link to others score 100% on referential integrity. Before cleaning, the transactions table could not be linked to securities at all.
 
 **Three points the committee should keep in mind when using the figures:**
 
-1. **Fee revenue has two versions.** The fee table shows **$204.7M** over five years; the fee transactions show **$263.7M**. They never agree. We use the fee table, which follows an exact formula. In addition, it is missing a fee in 5.7% of months (roughly $17.9M, estimated).
+1. **Fee revenue has two versions.** The fee table shows **$204.7M** over five years; the fee transactions show **$263.7M**. They never agree. We use the fee table, which follows an exact formula. In addition, it is missing a fee in 5.7% of months (7,350 client-months), so revenue from it is understated.
 2. **AUM excludes deposits and withdrawals.** Account values move only with investment returns. Net client deposits of **$327.4M** over five years are not reflected in AUM.
 3. **Performance figures should exclude flagged rows.** 1,475 snapshots show unrealistic returns (up to +9,467%) and 420 show an artificial $1,000 balance. All of them are small Retail accounts. They are kept but flagged, so averages aren't distorted.
 

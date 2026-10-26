@@ -89,7 +89,7 @@ Then run the validation script:
 python3 hw04/scripts/03_validate.py
 ```
 
-It takes about 20 seconds and writes both reports to `hw04/reports/`. It reads the clean files, so run `02_clean.py` first. On the clean data every table scores 100% on all five scorecard measures.
+It takes about 20 seconds and writes both reports to `hw04/reports/`. It reads the clean files, so run `02_clean.py` first. On the clean data every table scores 100% on every scorecard measure that applies (referential match is n/a for the advisor, benchmark and calendar tables, which don't link to other tables).
 
 ## Claude Code findings
 
