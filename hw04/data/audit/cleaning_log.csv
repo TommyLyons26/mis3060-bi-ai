@@ -1,0 +1,29 @@
+table,issue,action,rows_affected,note
+dim_client,Duplicate clients (2501–2525),quarantine,25,"quarantine_dim_client_duplicates.csv; copies had 0 snapshots, fees and transactions"
+fact_transactions,Transactions for clients that don't exist,quarantine,200,quarantine_fact_transactions_orphans.csv with original_txn_id of the row each one copies
+dim_client,Full state names instead of 2-letter codes,standardize,77,lookup table; per-state totals reconcile to the name+code counts before the fix
+fact_portfolio_snapshot,return_ytd stored as text percentages,convert,300,÷100; confirmed by return − benchmark = alpha (within 0.0001: % values were truncated at 2 dp)
+fact_transactions,security_id stored as '45.0',convert,197044,every converted ID joins to dim_security; blanks (cash-flow rows) untouched
+fact_transactions,Negative shares on Buy transactions,standardize + flag,835,sign removed; amount = shares × price now holds for every trade; flag shares_sign_fixed
+dim_client,Blank risk profile,fill + flag,75,filled 'Unknown' (not guessed); flag risk_profile_missing; benchmark 3 kept
+dim_security,Doubled 'Inc Inc.' in security names,standardize,14,display label only; no fixed name clashes with another security
+fact_portfolio_snapshot,"AUM stuck at the $1,000 floor",flag,420,aum_at_floor; true balance cannot be recovered (return was computed from the floor)
+fact_fees,"Fee charged on the $1,000 floor AUM",flag,386,"aum_at_floor, matched to the snapshot of the same client-month"
+fact_portfolio_snapshot,Extreme YTD returns,flag,1475,"return_extreme; values kept (AUM and return agree, so nothing to correct)"
+fact_portfolio_snapshot,Months with no fee,flag,7350,fee_missing; fact_fees left as is (no fees invented)
+fact_transactions,Buys/Sells on weekends,flag,40630,non_trading_day; dates kept (moving them would invent dates)
+fact_transactions,Inactive clients still transacting,flag,2410,after_account_closed; rows kept (some may be genuine closing transactions)
+dim_advisor,'None' in certifications (#6),leave as is,0,means no certification; must stay text
+fact_fees,Two near-identical fees (#10),leave as is,0,different months; values match because of the floor
+fact_transactions,Same-day deposit/withdrawal pairs (#13),leave as is,0,separate transactions with different amounts
+fact_transactions,Advisory Fee transactions vs fact_fees (#15),leave as is,0,use fact_fees for revenue
+fact_transactions,Sells exceed shares bought (#17),leave as is,0,do not calculate holdings from transactions
+fact_portfolio_snapshot,AUM excludes deposits/withdrawals (#19),leave as is,0,do not combine AUM with cash flows
+dim_advisor,Row reconciliation,check,0,raw 25 = clean 25 + quarantined 0
+dim_benchmark,Row reconciliation,check,0,raw 8 = clean 8 + quarantined 0
+dim_client,Row reconciliation,check,0,raw 2525 = clean 2500 + quarantined 25
+dim_date,Row reconciliation,check,0,raw 1827 = clean 1827 + quarantined 0
+dim_security,Row reconciliation,check,0,raw 500 = clean 500 + quarantined 0
+fact_fees,Row reconciliation,check,0,raw 122197 = clean 122197 + quarantined 0
+fact_portfolio_snapshot,Row reconciliation,check,0,raw 129547 = clean 129547 + quarantined 0
+fact_transactions,Row reconciliation,check,0,raw 298772 = clean 298572 + quarantined 200

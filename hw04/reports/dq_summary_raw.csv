@@ -1,0 +1,385 @@
+check_id,group,severity,status,table,column,rule,n_failed,n_checked,pct_failed,examples,detail
+DQ055,1-Column,ERROR,FINDING,dim_client,state,Value in allowed set,78,2525,0.030891,client_id=109 [state='Pennsylvania'] | client_id=153 [state='Pennsylvania'] | client_id=172 [state='New York'] | client_id=218 [state='New Jersey'] | client_id=223 [state='Pennsylvania'],not allowed: Pennsylvania (25); Florida (15); New York (14); New Jersey (13); California (5); Illinois (4); Texas (2)
+DQ231,1-Column,ERROR,FINDING,fact_portfolio_snapshot,return_ytd,Values parse as decimal,300,129547,0.002316,snapshot_id=42 [return_ytd='9.28%'] | snapshot_id=59 [return_ytd='19.52%'] | snapshot_id=879 [return_ytd='13.35%'] | snapshot_id=1229 [return_ytd='4.04%'] | snapshot_id=1354 [return_ytd='-3.18%'],"formatted strings (%/$/,) mixed into a numeric column; pd.to_numeric fails. Failing formats: percent=300"
+DQ261,1-Column,ERROR,FINDING,fact_transactions,security_id,Values parse as identifier,197175,197175,1.0,txn_id=1 [security_id='45.0'] | txn_id=5 [security_id='174.0'] | txn_id=7 [security_id='478.0'] | txn_id=9 [security_id='406.0'] | txn_id=11 [security_id='484.0'],IDs stored as '45.0': text join to '45' fails until cast to int. Failing formats: int_float=197175
+DQ339,2-Single-table,ERROR,FINDING,fact_transactions,shares,Shares are positive (direction comes from txn_type),836,197175,0.00424,"txn_id=272 [txn_type='Buy', shares='-261.9719', price='441.71', amount='115715.61'] | txn_id=812 [txn_type='Buy', shares='-338.0946', price='397.85', amount='134510.94'] | txn_id=815 [txn_type='Buy', shares='-360.8407', price='243.46', amount='87850.28'] | txn_id=1989 [txn_type='Buy', shares='-237.4548', price='268.44', amount='63742.37'] | txn_id=2371 [txn_type='Buy', shares='-374.4641', price='30.65', amount='11477.32']",
+DQ373,3-Referential,ERROR,FINDING,fact_transactions,client_id,fact_transactions.client_id → dim_client.client_id exists,200,298772,0.000669,txn_id=298573 [client_id='3191'] | txn_id=298574 [client_id='3017'] | txn_id=298575 [client_id='3058'] | txn_id=298576 [client_id='2974'] | txn_id=298577 [client_id='3131'],200 distinct orphan keys
+DQ376,3-Referential,ERROR,FINDING,fact_transactions,security_id,fact_transactions.security_id joins to dim_security.security_id as raw text,197175,197175,1.0,txn_id=1 [security_id='45.0'] | txn_id=5 [security_id='174.0'] | txn_id=7 [security_id='478.0'] | txn_id=9 [security_id='406.0'] | txn_id=11 [security_id='484.0'],Key format differs from the parent (e.g. '45.0' vs '45'); cast both to int before joining
+DQ023,1-Column,WARN,FINDING,dim_advisor,certifications,No literal null tokens (None/NULL/NA/...),6,25,0.24,advisor_id=2 [certifications='None'] | advisor_id=5 [certifications='None'] | advisor_id=11 [certifications='None'] | advisor_id=12 [certifications='None'] | advisor_id=13 [certifications='None'],Decide on purpose whether the token means 'missing' or is a real value (found: None)
+DQ063,1-Column,WARN,FINDING,dim_client,risk_profile,Not blank,76,2525,0.030099,client_id=57 | client_id=94 | client_id=135 | client_id=179 | client_id=189,
+DQ300,2-Single-table,WARN,FINDING,dim_client,*,No near-duplicate rows (same on all but one column),50,2525,0.019802,client_id=99 [last_name='Jacobson'] | client_id=155 [last_name='Cooper'] | client_id=560 [last_name='Cervantes'] | client_id=566 [last_name='Frazier'] | client_id=674 [last_name='Taylor'],differing column -> rows: last_name=50
+DQ319,2-Single-table,WARN,FINDING,dim_client,client_id,"No duplicate client records (same person, last name spelled differently)",25,2525,0.009901,"client_id=2501 [first_name='Karina', last_name='Taylo', kept_client_id='674'] | client_id=2502 [first_name='Darren', last_name='Marti', kept_client_id='1795'] | client_id=2503 [first_name='Terri', last_name='Jacobso', kept_client_id='99'] | client_id=2504 [first_name='Andrea', last_name='Collin', kept_client_id='2240'] | client_id=2505 [first_name='Jennifer', last_name='Taylo', kept_client_id='737']","Matching on first_name, age, city, zip, initial_aum and client_since; flagged row = higher client_id"
+DQ326,2-Single-table,WARN,FINDING,dim_security,name,Security name has no doubled suffix (e.g. 'Inc Inc.'),14,500,0.028,"security_id=6 [ticker='RNG', name='Perez Inc Inc.'] | security_id=17 [ticker='FDYO', name='Frazier Inc Inc.'] | security_id=48 [ticker='EZGC', name='Baxter Inc Inc.'] | security_id=61 [ticker='XDD', name='Yu Inc Inc.'] | security_id=111 [ticker='ZMKI', name='Diaz Inc Inc.']",
+DQ309,2-Single-table,WARN,FINDING,fact_fees,*,No near-duplicate rows (same on all but one column),2,122197,1.6e-05,fee_id=57446 [fee_date='2020-06-01'] | fee_id=57490 [fee_date='2024-04-01'],differing column -> rows: fee_date=2
+DQ330,2-Single-table,WARN,FINDING,fact_fees,aum_basis,"AUM basis is not the $1,000 floor value",386,122197,0.003159,"fee_id=1380 [client_id='29', fee_date='2021-02-01', aum_basis='1000.0', amount='0.73'] | fee_id=1629 [client_id='33', fee_date='2023-02-01', aum_basis='1000.0', amount='0.73'] | fee_id=1630 [client_id='33', fee_date='2023-03-01', aum_basis='1000.0', amount='0.72'] | fee_id=1631 [client_id='33', fee_date='2023-04-01', aum_basis='1000.0', amount='0.73'] | fee_id=1638 [client_id='33', fee_date='2024-01-01', aum_basis='1000.0', amount='0.77']",
+DQ333,2-Single-table,WARN,FINDING,fact_portfolio_snapshot,return_ytd,YTD return is plausible (between −90% and +100%),1475,129547,0.011386,"snapshot_id=1463 [client_id='29', snapshot_date='2021-02-01', aum='1000.0', return_ytd='-0.97695'] | snapshot_id=1464 [client_id='29', snapshot_date='2021-03-01', aum='1000.0', return_ytd='-0.97695'] | snapshot_id=1465 [client_id='29', snapshot_date='2021-04-01', aum='1013.46', return_ytd='-0.97664'] | snapshot_id=1466 [client_id='29', snapshot_date='2021-05-01', aum='1016.47', return_ytd='-0.976571'] | snapshot_id=1467 [client_id='29', snapshot_date='2021-06-01', aum='1042.05', return_ytd='-0.975981']",
+DQ334,2-Single-table,WARN,FINDING,fact_portfolio_snapshot,aum,"AUM is not the $1,000 floor value",420,129547,0.003242,"snapshot_id=1463 [client_id='29', snapshot_date='2021-02-01', aum='1000.0', return_ytd='-0.97695'] | snapshot_id=1464 [client_id='29', snapshot_date='2021-03-01', aum='1000.0', return_ytd='-0.97695'] | snapshot_id=1727 [client_id='33', snapshot_date='2023-02-01', aum='1000.0', return_ytd='-0.961475'] | snapshot_id=1728 [client_id='33', snapshot_date='2023-03-01', aum='1000.0', return_ytd='-0.961475'] | snapshot_id=1729 [client_id='33', snapshot_date='2023-04-01', aum='1000.0', return_ytd='-0.961475']",
+DQ315,2-Single-table,WARN,FINDING,fact_transactions,*,No near-duplicate rows (same on all but one column),1464,298772,0.0049,"txn_id=25 [client_id='1', txn_date='2024-09-25', amount='94893.52'] | txn_id=136 [client_id='1', txn_date='2024-09-25', amount='26587.27'] | txn_id=1214 [client_id='12', txn_date='2022-07-16', amount='69066.71'] | txn_id=1231 [client_id='12', txn_date='2022-07-16', amount='3981.53'] | txn_id=1798 [client_id='16', txn_date='2022-07-24', amount='121.61']","differing column -> rows: client_id=400, txn_date=14, amount=1050"
+DQ342,2-Single-table,WARN,FINDING,fact_transactions,client_id,No transaction is a copy of another client's transaction (identical except client_id),400,298772,0.001339,"txn_id=1798 [client_id='16', txn_date='2022-07-24', txn_type='Advisory Fee', amount='121.61'] | txn_id=2717 [client_id='24', txn_date='2021-05-22', txn_type='Withdrawal', amount='28158.16'] | txn_id=2718 [client_id='24', txn_date='2023-12-06', txn_type='Dividend', amount='30674.27'] | txn_id=3285 [client_id='29', txn_date='2020-09-03', txn_type='Advisory Fee', amount='179.82'] | txn_id=4060 [client_id='35', txn_date='2023-02-03', txn_type='Dividend', amount='66194.92']",Both rows of each pair are flagged; compare with the orphan client_id check in group 3
+DQ352,4-Cross-table,WARN,FINDING,fact_portfolio_snapshot,benchmark_id,Clients with blank risk_profile are not silently assigned a benchmark,3942,129547,0.030429,"snapshot_id=2998 [client_id='57', risk_profile_dim='', benchmark_id='3'] | snapshot_id=2999 [client_id='57', risk_profile_dim='', benchmark_id='3'] | snapshot_id=3000 [client_id='57', risk_profile_dim='', benchmark_id='3'] | snapshot_id=3001 [client_id='57', risk_profile_dim='', benchmark_id='3'] | snapshot_id=3002 [client_id='57', risk_profile_dim='', benchmark_id='3']",
+DQ357,4-Cross-table,WARN,FINDING,fact_portfolio_snapshot,client_id+snapshot_date,Every snapshot month has a fee charge,7350,129547,0.056736,"snapshot_id=22 [client_id='1', snapshot_date='2021-10-01', aum='4160730.0'] | snapshot_id=42 [client_id='1', snapshot_date='2023-06-01', aum='3690339.76'] | snapshot_id=59 [client_id='1', snapshot_date='2024-11-01', aum='4750984.58'] | snapshot_id=61 [client_id='2', snapshot_date='2020-11-01', aum='495753.5'] | snapshot_id=66 [client_id='2', snapshot_date='2021-04-01', aum='530565.16']",
+DQ358,4-Cross-table,WARN,FINDING,fact_transactions,amount,"Advisory Fee transactions reconcile to fact_fees (same client-month total, ±$0.01)",35765,35766,0.999972,"txn_id=4 [client_id='1', txn_date='2023-07-21', amount='7130.27', fact_fees_month_total=2059.1] | txn_id=10 [client_id='1', txn_date='2020-10-06', amount='6101.79', fact_fees_month_total=2165.04] | txn_id=20 [client_id='1', txn_date='2024-03-16', amount='8160.83', fact_fees_month_total=2259.92] | txn_id=24 [client_id='1', txn_date='2024-03-04', amount='7523.38', fact_fees_month_total=2259.92] | txn_id=48 [client_id='1', txn_date='2021-02-04', amount='7615.21', fact_fees_month_total=2204.06]","Yearly totals ($): 2020: fees 31,972,100 vs txns 38,632,524; 2021: fees 39,244,892 vs txns 45,061,967; 2022: fees 42,368,785 vs txns 54,231,891; 2023: fees 42,375,801 vs txns 63,662,509; 2024: fees 48,714,006 vs txns 62,191,345"
+DQ359,4-Cross-table,WARN,FINDING,fact_transactions,txn_date,Buy/Sell happen on trading days (dim_date.is_trading_day),40649,143311,0.283642,"txn_id=26 [txn_type='Buy', txn_date='2020-10-25'] | txn_id=43 [txn_type='Sell', txn_date='2022-01-02'] | txn_id=51 [txn_type='Buy', txn_date='2020-05-03'] | txn_id=54 [txn_type='Buy', txn_date='2022-02-20'] | txn_id=66 [txn_type='Buy', txn_date='2021-05-22']",
+DQ361,4-Cross-table,WARN,FINDING,fact_transactions,shares,Running share position never goes negative (no selling more than was bought),43010,59755,0.719772,"txn_id=128577 [client_id='1080', security_id='414.0', txn_date='2020-01-01', shares='193.2164', pos=-193.2164] | txn_id=130487 [client_id='1094', security_id='39.0', txn_date='2020-01-01', shares='202.6538', pos=-202.6538] | txn_id=144274 [client_id='1206', security_id='238.0', txn_date='2020-01-01', shares='495.1617', pos=-495.1617] | txn_id=144281 [client_id='1206', security_id='303.0', txn_date='2020-01-01', shares='403.4876', pos=-403.4876] | txn_id=155222 [client_id='1295', security_id='421.0', txn_date='2020-01-01', shares='321.2769', pos=-321.2769]","No opening positions exist before 2020, so early sells may be legitimate; confirm with the business"
+DQ362,4-Cross-table,WARN,FINDING,fact_transactions,txn_date,Inactive clients have no transactions after their last snapshot month,2410,21092,0.114261,"txn_id=1278 [client_id='13', txn_date='2023-09-08', txn_type='Deposit', last_snapshot_month='2023-03'] | txn_id=1282 [client_id='13', txn_date='2023-04-12', txn_type='Dividend', last_snapshot_month='2023-03'] | txn_id=1285 [client_id='13', txn_date='2023-11-16', txn_type='Sell', last_snapshot_month='2023-03'] | txn_id=1287 [client_id='13', txn_date='2023-10-14', txn_type='Sell', last_snapshot_month='2023-03'] | txn_id=1288 [client_id='13', txn_date='2023-04-25', txn_type='Advisory Fee', last_snapshot_month='2023-03']",
+DQ059,1-Column,INFO,FINDING,dim_client,zip_code,Leading zeros present: keep as text,232,2525,0.091881,,Default parsing would turn '03897' into 3897
+DQ149,1-Column,INFO,FINDING,dim_security,sector,Blank cells present (optional column),219,500,0.438,,Blank is kept as '' when read as text; check in group 2 whether blanks are expected
+DQ162,1-Column,INFO,FINDING,dim_security,expense_ratio_bps,Blank cells present (optional column),281,500,0.562,,Blank is kept as '' when read as text; check in group 2 whether blanks are expected
+DQ264,1-Column,INFO,FINDING,fact_transactions,security_id,Blank cells present (optional column),101597,298772,0.340049,,Blank is kept as '' when read as text; check in group 2 whether blanks are expected
+DQ276,1-Column,INFO,FINDING,fact_transactions,shares,Blank cells present (optional column),101597,298772,0.340049,,Blank is kept as '' when read as text; check in group 2 whether blanks are expected
+DQ280,1-Column,INFO,FINDING,fact_transactions,price,Blank cells present (optional column),101597,298772,0.340049,,Blank is kept as '' when read as text; check in group 2 whether blanks are expected
+DQ316,2-Single-table,INFO,FINDING,dim_advisor,certifications,'None' means no certification (not missing),6,25,0.24,advisor_id=2 [certifications='None'] | advisor_id=5 [certifications='None'] | advisor_id=11 [certifications='None'] | advisor_id=12 [certifications='None'] | advisor_id=13 [certifications='None'],
+DQ327,2-Single-table,INFO,FINDING,dim_security,name,Security names are unique (different tickers may share a name),6,500,0.012,"security_id=38 [ticker='OLAB', name='Jones Inc Fund', asset_class='Alternative'] | security_id=62 [ticker='YXPS', name='Jones Inc Fund', asset_class='Fixed Income'] | security_id=317 [ticker='RONV', name='Davis PLC Fund', asset_class='Fixed Income'] | security_id=371 [ticker='YMS', name='Davis PLC Fund', asset_class='Alternative'] | security_id=388 [ticker='PPJV', name='Graham Group Inc.', asset_class='Equity']",
+DQ341,2-Single-table,INFO,FINDING,fact_transactions,amount,"Dividend amount = shares × price (looks like position value, not cash paid)",53864,53864,1.0,"txn_id=1 [shares='455.1138', price='147.9', amount='67311.33'] | txn_id=7 [shares='315.4236', price='243.52', amount='76811.96'] | txn_id=12 [shares='99.0308', price='239.1', amount='23678.26'] | txn_id=13 [shares='472.0851', price='46.79', amount='22088.86'] | txn_id=19 [shares='30.9847', price='465.67', amount='14428.65']",
+DQ382,3-Referential,INFO,FINDING,dim_benchmark,benchmark_id,Every dim_benchmark row is used by a fact table,5,8,0.625,benchmark_id=2 [benchmark_id='2'] | benchmark_id=4 [benchmark_id='4'] | benchmark_id=5 [benchmark_id='5'] | benchmark_id=6 [benchmark_id='6'] | benchmark_id=7 [benchmark_id='7'],referenced from fact_portfolio_snapshot.benchmark_id
+DQ383,3-Referential,INFO,FINDING,dim_client,client_id,Every dim_client row is used by a fact table,25,2525,0.009901,client_id=2501 [client_id='2501'] | client_id=2502 [client_id='2502'] | client_id=2503 [client_id='2503'] | client_id=2504 [client_id='2504'] | client_id=2505 [client_id='2505'],"referenced from fact_fees.client_id, fact_portfolio_snapshot.client_id, fact_transactions.client_id"
+DQ377,3-Referential,INFO,FINDING,fact_transactions,security_id,FK security_id populated,101597,298772,0.340049,,Allowed only for cash-flow rows (see group 2)
+DQ365,4-Cross-table,INFO,FINDING,dim_advisor,aum_target_mm,Advisor book (latest-month AUM) is within 0.5×–2× of aum_target_mm,24,25,0.96,"advisor_id=1 [advisor_id='1', aum_target_mm='100', book_mm=303.6] | advisor_id=2 [advisor_id='2', aum_target_mm='50', book_mm=655.0] | advisor_id=3 [advisor_id='3', aum_target_mm='150', book_mm=578.2] | advisor_id=4 [advisor_id='4', aum_target_mm='75', book_mm=540.0] | advisor_id=5 [advisor_id='5', aum_target_mm='50', book_mm=481.5]",
+DQ364,4-Cross-table,INFO,FINDING,dim_client,initial_aum,First snapshot AUM is within 0.5×–2× of initial_aum,2,2500,0.0008,"client_id=663 [client_id='663', client_since='2017-09-16', initial_aum='61220.65', first_aum=13991.5] | client_id=1171 [client_id='1171', client_since='2021-03-19', initial_aum='52612.41', first_aum=14174.36]",
+DQ360,4-Cross-table,INFO,FINDING,fact_transactions,txn_date,Cash flows / dividends / fees on non-trading days,44350,155461,0.285281,"txn_id=1 [txn_type='Dividend', txn_date='2023-12-16'] | txn_id=6 [txn_type='Withdrawal', txn_date='2022-11-05'] | txn_id=8 [txn_type='Withdrawal', txn_date='2023-10-07'] | txn_id=20 [txn_type='Advisory Fee', txn_date='2024-03-16'] | txn_id=22 [txn_type='Withdrawal', txn_date='2021-02-21']",
+DQ001,1-Column,ERROR,PASS,dim_advisor,advisor_id,Values parse as identifier,0,25,0.0,,values do not parse as the expected type
+DQ003,1-Column,ERROR,PASS,dim_advisor,advisor_id,Not blank,0,25,0.0,,
+DQ004,1-Column,ERROR,PASS,dim_advisor,advisor_id,Primary key unique,0,25,0.0,,
+DQ007,1-Column,ERROR,PASS,dim_advisor,first_name,Not blank,0,25,0.0,,
+DQ010,1-Column,ERROR,PASS,dim_advisor,last_name,Not blank,0,25,0.0,,
+DQ013,1-Column,ERROR,PASS,dim_advisor,region,Value in allowed set,0,25,0.0,,"allowed: Mid-Atlantic, Midwest, Northeast, Southeast, Southwest, West"
+DQ014,1-Column,ERROR,PASS,dim_advisor,years_experience,Values parse as integer,0,25,0.0,,values do not parse as the expected type
+DQ017,1-Column,ERROR,PASS,dim_advisor,years_experience,"Within range [0, 60]",0,25,0.0,,
+DQ018,1-Column,ERROR,PASS,dim_advisor,aum_target_mm,Values parse as integer,0,25,0.0,,values do not parse as the expected type
+DQ021,1-Column,ERROR,PASS,dim_advisor,aum_target_mm,"Within range [1, 10000]",0,25,0.0,,
+DQ024,1-Column,ERROR,PASS,dim_advisor,certifications,Every comma-separated token in allowed set,0,19,0.0,,
+DQ025,1-Column,ERROR,PASS,dim_benchmark,benchmark_id,Values parse as identifier,0,8,0.0,,values do not parse as the expected type
+DQ027,1-Column,ERROR,PASS,dim_benchmark,benchmark_id,Not blank,0,8,0.0,,
+DQ028,1-Column,ERROR,PASS,dim_benchmark,benchmark_id,Primary key unique,0,8,0.0,,
+DQ031,1-Column,ERROR,PASS,dim_benchmark,name,Not blank,0,8,0.0,,
+DQ034,1-Column,ERROR,PASS,dim_benchmark,asset_class,Value in allowed set,0,8,0.0,,"allowed: Cash, Emerging, Equity, Fixed Income, International, Multi-Asset, Small Cap"
+DQ037,1-Column,ERROR,PASS,dim_benchmark,ticker_proxy,"Matches pattern [A-Z0-9_]{2,12}",0,8,0.0,,
+DQ287,1-Column,ERROR,PASS,dim_benchmark,name,Natural/business key unique,0,8,0.0,,
+DQ288,1-Column,ERROR,PASS,dim_benchmark,ticker_proxy,Natural/business key unique,0,8,0.0,,
+DQ038,1-Column,ERROR,PASS,dim_client,client_id,Values parse as identifier,0,2525,0.0,,values do not parse as the expected type
+DQ040,1-Column,ERROR,PASS,dim_client,client_id,Not blank,0,2525,0.0,,
+DQ041,1-Column,ERROR,PASS,dim_client,client_id,Primary key unique,0,2525,0.0,,
+DQ044,1-Column,ERROR,PASS,dim_client,first_name,Not blank,0,2525,0.0,,
+DQ047,1-Column,ERROR,PASS,dim_client,last_name,Not blank,0,2525,0.0,,
+DQ048,1-Column,ERROR,PASS,dim_client,age,Values parse as integer,0,2525,0.0,,values do not parse as the expected type
+DQ051,1-Column,ERROR,PASS,dim_client,age,"Within range [18, 110]",0,2525,0.0,,
+DQ056,1-Column,ERROR,PASS,dim_client,zip_code,Values parse as code,0,2525,0.0,,values do not parse as the expected type
+DQ060,1-Column,ERROR,PASS,dim_client,zip_code,Matches pattern \d{5},0,2525,0.0,,
+DQ064,1-Column,ERROR,PASS,dim_client,risk_profile,Value in allowed set,0,2449,0.0,,"allowed: Aggressive, Balanced, Conservative, Moderately Aggressive, Moderately Conservative"
+DQ067,1-Column,ERROR,PASS,dim_client,client_tier,Value in allowed set,0,2525,0.0,,"allowed: HNW, Retail, UHNW"
+DQ070,1-Column,ERROR,PASS,dim_client,primary_account_type,Value in allowed set,0,2525,0.0,,"allowed: 529, IRA, Roth IRA, Taxable, Trust"
+DQ071,1-Column,ERROR,PASS,dim_client,initial_aum,Values parse as decimal,0,2525,0.0,,values do not parse as the expected type
+DQ074,1-Column,ERROR,PASS,dim_client,initial_aum,"Within range [0.01, inf]",0,2525,0.0,,
+DQ075,1-Column,ERROR,PASS,dim_client,client_since,Values parse as date,0,2525,0.0,,values do not parse as the expected type
+DQ078,1-Column,ERROR,PASS,dim_client,client_since,"Within range [1950-01-01, 2024-12-31]",0,2525,0.0,,
+DQ079,1-Column,ERROR,PASS,dim_client,advisor_id,Values parse as identifier,0,2525,0.0,,values do not parse as the expected type
+DQ082,1-Column,ERROR,PASS,dim_client,advisor_id,Not blank,0,2525,0.0,,
+DQ083,1-Column,ERROR,PASS,dim_client,is_active,Values parse as boolean,0,2525,0.0,,values do not parse as the expected type
+DQ086,1-Column,ERROR,PASS,dim_client,is_active,Value in allowed set,0,2525,0.0,,"allowed: False, True"
+DQ087,1-Column,ERROR,PASS,dim_date,date_id,Values parse as identifier,0,1827,0.0,,values do not parse as the expected type
+DQ089,1-Column,ERROR,PASS,dim_date,date_id,Not blank,0,1827,0.0,,
+DQ090,1-Column,ERROR,PASS,dim_date,date_id,Primary key unique,0,1827,0.0,,
+DQ091,1-Column,ERROR,PASS,dim_date,date,Values parse as date,0,1827,0.0,,values do not parse as the expected type
+DQ094,1-Column,ERROR,PASS,dim_date,date,Not blank,0,1827,0.0,,
+DQ095,1-Column,ERROR,PASS,dim_date,year,Values parse as integer,0,1827,0.0,,values do not parse as the expected type
+DQ098,1-Column,ERROR,PASS,dim_date,year,"Within range [1900, 2100]",0,1827,0.0,,
+DQ099,1-Column,ERROR,PASS,dim_date,quarter,Values parse as integer,0,1827,0.0,,values do not parse as the expected type
+DQ102,1-Column,ERROR,PASS,dim_date,quarter,"Within range [1, 4]",0,1827,0.0,,
+DQ103,1-Column,ERROR,PASS,dim_date,month,Values parse as integer,0,1827,0.0,,values do not parse as the expected type
+DQ106,1-Column,ERROR,PASS,dim_date,month,"Within range [1, 12]",0,1827,0.0,,
+DQ109,1-Column,ERROR,PASS,dim_date,month_name,Value in allowed set,0,1827,0.0,,"allowed: April, August, December, February, January, July, June, March, May, November, October, September"
+DQ110,1-Column,ERROR,PASS,dim_date,week_of_year,Values parse as integer,0,1827,0.0,,values do not parse as the expected type
+DQ113,1-Column,ERROR,PASS,dim_date,week_of_year,"Within range [1, 53]",0,1827,0.0,,
+DQ116,1-Column,ERROR,PASS,dim_date,day_of_week,Value in allowed set,0,1827,0.0,,"allowed: Friday, Monday, Saturday, Sunday, Thursday, Tuesday, Wednesday"
+DQ117,1-Column,ERROR,PASS,dim_date,is_month_end,Values parse as boolean,0,1827,0.0,,values do not parse as the expected type
+DQ120,1-Column,ERROR,PASS,dim_date,is_month_end,Value in allowed set,0,1827,0.0,,"allowed: 0, 1"
+DQ121,1-Column,ERROR,PASS,dim_date,is_quarter_end,Values parse as boolean,0,1827,0.0,,values do not parse as the expected type
+DQ124,1-Column,ERROR,PASS,dim_date,is_quarter_end,Value in allowed set,0,1827,0.0,,"allowed: 0, 1"
+DQ125,1-Column,ERROR,PASS,dim_date,is_year_end,Values parse as boolean,0,1827,0.0,,values do not parse as the expected type
+DQ128,1-Column,ERROR,PASS,dim_date,is_year_end,Value in allowed set,0,1827,0.0,,"allowed: 0, 1"
+DQ129,1-Column,ERROR,PASS,dim_date,is_trading_day,Values parse as boolean,0,1827,0.0,,values do not parse as the expected type
+DQ132,1-Column,ERROR,PASS,dim_date,is_trading_day,Value in allowed set,0,1827,0.0,,"allowed: 0, 1"
+DQ289,1-Column,ERROR,PASS,dim_date,date,Natural/business key unique,0,1827,0.0,,
+DQ133,1-Column,ERROR,PASS,dim_security,security_id,Values parse as identifier,0,500,0.0,,values do not parse as the expected type
+DQ135,1-Column,ERROR,PASS,dim_security,security_id,Not blank,0,500,0.0,,
+DQ136,1-Column,ERROR,PASS,dim_security,security_id,Primary key unique,0,500,0.0,,
+DQ139,1-Column,ERROR,PASS,dim_security,ticker,Not blank,0,500,0.0,,
+DQ140,1-Column,ERROR,PASS,dim_security,ticker,"Matches pattern [A-Z]{1,5}",0,500,0.0,,
+DQ143,1-Column,ERROR,PASS,dim_security,name,Not blank,0,500,0.0,,
+DQ146,1-Column,ERROR,PASS,dim_security,asset_class,Value in allowed set,0,500,0.0,,"allowed: Alternative, Cash Equivalent, Equity, Fixed Income"
+DQ150,1-Column,ERROR,PASS,dim_security,sector,Value in allowed set,0,281,0.0,,"allowed: Communication Services, Consumer Discretionary, Consumer Staples, Energy, Financials, Healthcare, Industrials, Materials, Real Estate, Technology, Utilities"
+DQ151,1-Column,ERROR,PASS,dim_security,benchmark_id,Values parse as identifier,0,500,0.0,,values do not parse as the expected type
+DQ154,1-Column,ERROR,PASS,dim_security,benchmark_id,Not blank,0,500,0.0,,
+DQ155,1-Column,ERROR,PASS,dim_security,is_etf,Values parse as boolean,0,500,0.0,,values do not parse as the expected type
+DQ158,1-Column,ERROR,PASS,dim_security,is_etf,Value in allowed set,0,500,0.0,,"allowed: False, True"
+DQ159,1-Column,ERROR,PASS,dim_security,expense_ratio_bps,Values parse as decimal,0,219,0.0,,values do not parse as the expected type
+DQ163,1-Column,ERROR,PASS,dim_security,expense_ratio_bps,"Within range [0, 300]",0,219,0.0,,
+DQ290,1-Column,ERROR,PASS,dim_security,ticker,Natural/business key unique,0,500,0.0,,
+DQ164,1-Column,ERROR,PASS,fact_fees,fee_id,Values parse as identifier,0,122197,0.0,,values do not parse as the expected type
+DQ166,1-Column,ERROR,PASS,fact_fees,fee_id,Not blank,0,122197,0.0,,
+DQ167,1-Column,ERROR,PASS,fact_fees,fee_id,Primary key unique,0,122197,0.0,,
+DQ168,1-Column,ERROR,PASS,fact_fees,client_id,Values parse as identifier,0,122197,0.0,,values do not parse as the expected type
+DQ171,1-Column,ERROR,PASS,fact_fees,client_id,Not blank,0,122197,0.0,,
+DQ172,1-Column,ERROR,PASS,fact_fees,advisor_id,Values parse as identifier,0,122197,0.0,,values do not parse as the expected type
+DQ175,1-Column,ERROR,PASS,fact_fees,advisor_id,Not blank,0,122197,0.0,,
+DQ176,1-Column,ERROR,PASS,fact_fees,fee_date,Values parse as date,0,122197,0.0,,values do not parse as the expected type
+DQ179,1-Column,ERROR,PASS,fact_fees,fee_date,Not blank,0,122197,0.0,,
+DQ180,1-Column,ERROR,PASS,fact_fees,fee_date,"Within range [2020-01-01, 2024-12-31]",0,122197,0.0,,
+DQ183,1-Column,ERROR,PASS,fact_fees,fee_type,Value in allowed set,0,122197,0.0,,"allowed: Advisory, Custodial, Management, Performance"
+DQ184,1-Column,ERROR,PASS,fact_fees,aum_basis,Values parse as decimal,0,122197,0.0,,values do not parse as the expected type
+DQ187,1-Column,ERROR,PASS,fact_fees,aum_basis,"Within range [0, inf]",0,122197,0.0,,
+DQ188,1-Column,ERROR,PASS,fact_fees,bps_charged,Values parse as decimal,0,122197,0.0,,values do not parse as the expected type
+DQ191,1-Column,ERROR,PASS,fact_fees,bps_charged,"Within range [0, 300]",0,122197,0.0,,
+DQ192,1-Column,ERROR,PASS,fact_fees,amount,Values parse as decimal,0,122197,0.0,,values do not parse as the expected type
+DQ195,1-Column,ERROR,PASS,fact_fees,amount,Not blank,0,122197,0.0,,
+DQ196,1-Column,ERROR,PASS,fact_fees,amount,"Within range [0, inf]",0,122197,0.0,,
+DQ291,1-Column,ERROR,PASS,fact_fees,client_id+fee_date,Natural/business key unique,0,122197,0.0,,
+DQ197,1-Column,ERROR,PASS,fact_portfolio_snapshot,snapshot_id,Values parse as identifier,0,129547,0.0,,values do not parse as the expected type
+DQ199,1-Column,ERROR,PASS,fact_portfolio_snapshot,snapshot_id,Not blank,0,129547,0.0,,
+DQ200,1-Column,ERROR,PASS,fact_portfolio_snapshot,snapshot_id,Primary key unique,0,129547,0.0,,
+DQ201,1-Column,ERROR,PASS,fact_portfolio_snapshot,client_id,Values parse as identifier,0,129547,0.0,,values do not parse as the expected type
+DQ204,1-Column,ERROR,PASS,fact_portfolio_snapshot,client_id,Not blank,0,129547,0.0,,
+DQ205,1-Column,ERROR,PASS,fact_portfolio_snapshot,advisor_id,Values parse as identifier,0,129547,0.0,,values do not parse as the expected type
+DQ208,1-Column,ERROR,PASS,fact_portfolio_snapshot,advisor_id,Not blank,0,129547,0.0,,
+DQ209,1-Column,ERROR,PASS,fact_portfolio_snapshot,benchmark_id,Values parse as identifier,0,129547,0.0,,values do not parse as the expected type
+DQ212,1-Column,ERROR,PASS,fact_portfolio_snapshot,benchmark_id,Not blank,0,129547,0.0,,
+DQ213,1-Column,ERROR,PASS,fact_portfolio_snapshot,snapshot_date,Values parse as date,0,129547,0.0,,values do not parse as the expected type
+DQ216,1-Column,ERROR,PASS,fact_portfolio_snapshot,snapshot_date,Not blank,0,129547,0.0,,
+DQ217,1-Column,ERROR,PASS,fact_portfolio_snapshot,snapshot_date,"Within range [2020-01-01, 2024-12-31]",0,129547,0.0,,
+DQ218,1-Column,ERROR,PASS,fact_portfolio_snapshot,year,Values parse as integer,0,129547,0.0,,values do not parse as the expected type
+DQ221,1-Column,ERROR,PASS,fact_portfolio_snapshot,year,"Within range [2020, 2024]",0,129547,0.0,,
+DQ222,1-Column,ERROR,PASS,fact_portfolio_snapshot,month,Values parse as integer,0,129547,0.0,,values do not parse as the expected type
+DQ225,1-Column,ERROR,PASS,fact_portfolio_snapshot,month,"Within range [1, 12]",0,129547,0.0,,
+DQ226,1-Column,ERROR,PASS,fact_portfolio_snapshot,aum,Values parse as decimal,0,129547,0.0,,values do not parse as the expected type
+DQ229,1-Column,ERROR,PASS,fact_portfolio_snapshot,aum,Not blank,0,129547,0.0,,
+DQ230,1-Column,ERROR,PASS,fact_portfolio_snapshot,aum,"Within range [0, inf]",0,129547,0.0,,
+DQ234,1-Column,ERROR,PASS,fact_portfolio_snapshot,return_ytd,"Within range [-1.0, inf]",0,129547,0.0,,
+DQ235,1-Column,ERROR,PASS,fact_portfolio_snapshot,benchmark_return_ytd,Values parse as decimal,0,129547,0.0,,values do not parse as the expected type
+DQ238,1-Column,ERROR,PASS,fact_portfolio_snapshot,benchmark_return_ytd,"Within range [-1.0, 2.0]",0,129547,0.0,,
+DQ239,1-Column,ERROR,PASS,fact_portfolio_snapshot,active_alpha_ytd,Values parse as decimal,0,129547,0.0,,values do not parse as the expected type
+DQ242,1-Column,ERROR,PASS,fact_portfolio_snapshot,cash_pct,Values parse as decimal,0,129547,0.0,,values do not parse as the expected type
+DQ245,1-Column,ERROR,PASS,fact_portfolio_snapshot,cash_pct,"Within range [0, 1]",0,129547,0.0,,
+DQ248,1-Column,ERROR,PASS,fact_portfolio_snapshot,account_type,Value in allowed set,0,129547,0.0,,"allowed: 529, IRA, Roth IRA, Taxable, Trust"
+DQ292,1-Column,ERROR,PASS,fact_portfolio_snapshot,client_id+snapshot_date,Natural/business key unique,0,129547,0.0,,
+DQ249,1-Column,ERROR,PASS,fact_transactions,txn_id,Values parse as identifier,0,298772,0.0,,values do not parse as the expected type
+DQ251,1-Column,ERROR,PASS,fact_transactions,txn_id,Not blank,0,298772,0.0,,
+DQ252,1-Column,ERROR,PASS,fact_transactions,txn_id,Primary key unique,0,298772,0.0,,
+DQ253,1-Column,ERROR,PASS,fact_transactions,client_id,Values parse as identifier,0,298772,0.0,,values do not parse as the expected type
+DQ256,1-Column,ERROR,PASS,fact_transactions,client_id,Not blank,0,298772,0.0,,
+DQ257,1-Column,ERROR,PASS,fact_transactions,advisor_id,Values parse as identifier,0,298772,0.0,,values do not parse as the expected type
+DQ260,1-Column,ERROR,PASS,fact_transactions,advisor_id,Not blank,0,298772,0.0,,
+DQ265,1-Column,ERROR,PASS,fact_transactions,txn_date,Values parse as date,0,298772,0.0,,values do not parse as the expected type
+DQ268,1-Column,ERROR,PASS,fact_transactions,txn_date,Not blank,0,298772,0.0,,
+DQ269,1-Column,ERROR,PASS,fact_transactions,txn_date,"Within range [2020-01-01, 2024-12-31]",0,298772,0.0,,
+DQ272,1-Column,ERROR,PASS,fact_transactions,txn_type,Value in allowed set,0,298772,0.0,,"allowed: Advisory Fee, Buy, Deposit, Dividend, Sell, Withdrawal"
+DQ273,1-Column,ERROR,PASS,fact_transactions,shares,Values parse as decimal,0,197175,0.0,,values do not parse as the expected type
+DQ277,1-Column,ERROR,PASS,fact_transactions,price,Values parse as decimal,0,197175,0.0,,values do not parse as the expected type
+DQ281,1-Column,ERROR,PASS,fact_transactions,price,"Within range [0.01, inf]",0,197175,0.0,,
+DQ282,1-Column,ERROR,PASS,fact_transactions,amount,Values parse as decimal,0,298772,0.0,,values do not parse as the expected type
+DQ285,1-Column,ERROR,PASS,fact_transactions,amount,Not blank,0,298772,0.0,,
+DQ286,1-Column,ERROR,PASS,fact_transactions,amount,"Within range [0.01, inf]",0,298772,0.0,,
+DQ293,2-Single-table,ERROR,PASS,dim_advisor,*,No exact duplicate rows (all columns),0,25,0.0,,
+DQ296,2-Single-table,ERROR,PASS,dim_benchmark,*,No exact duplicate rows (all columns),0,8,0.0,,
+DQ298,2-Single-table,ERROR,PASS,dim_client,*,No exact duplicate rows (all columns),0,2525,0.0,,
+DQ301,2-Single-table,ERROR,PASS,dim_date,*,No exact duplicate rows (all columns),0,1827,0.0,,
+DQ320,2-Single-table,ERROR,PASS,dim_date,year/quarter/month/month_name/day_of_week/week_of_year,Calendar attributes agree with the date,0,1827,0.0,,
+DQ321,2-Single-table,ERROR,PASS,dim_date,is_month_end/is_quarter_end/is_year_end,Period-end flags agree with the date,0,1827,0.0,,
+DQ322,2-Single-table,ERROR,PASS,dim_date,is_trading_day,Weekends are not trading days,0,1827,0.0,,
+DQ323,2-Single-table,ERROR,PASS,dim_date,date,Calendar is continuous (no missing days),0,1827,0.0,,
+DQ304,2-Single-table,ERROR,PASS,dim_security,*,No exact duplicate rows (all columns),0,500,0.0,,
+DQ324,2-Single-table,ERROR,PASS,dim_security,is_etf+expense_ratio_bps,ETFs have an expense ratio; single stocks do not,0,500,0.0,,
+DQ325,2-Single-table,ERROR,PASS,dim_security,asset_class+sector,Equities have a sector; other asset classes do not,0,500,0.0,,
+DQ307,2-Single-table,ERROR,PASS,fact_fees,*,No exact duplicate rows (all columns),0,122197,0.0,,
+DQ328,2-Single-table,ERROR,PASS,fact_fees,amount,"amount = aum_basis × bps_charged / 10,000 / 12 (±$0.01)",0,122197,0.0,,
+DQ310,2-Single-table,ERROR,PASS,fact_portfolio_snapshot,*,No exact duplicate rows (all columns),0,129547,0.0,,
+DQ331,2-Single-table,ERROR,PASS,fact_portfolio_snapshot,year+month,year and month agree with snapshot_date,0,129547,0.0,,
+DQ332,2-Single-table,ERROR,PASS,fact_portfolio_snapshot,active_alpha_ytd,active_alpha_ytd = return_ytd − benchmark_return_ytd (±0.0001),0,129547,0.0,,
+DQ336,2-Single-table,ERROR,PASS,fact_portfolio_snapshot,client_id+snapshot_date,Each client has an unbroken monthly series (no missing months),0,129547,0.0,,
+DQ313,2-Single-table,ERROR,PASS,fact_transactions,*,No exact duplicate rows (all columns),0,298772,0.0,,
+DQ337,2-Single-table,ERROR,PASS,fact_transactions,security_id/shares/price,"Buy/Sell/Dividend rows have security, shares and price",0,197175,0.0,,
+DQ338,2-Single-table,ERROR,PASS,fact_transactions,security_id/shares/price,"Deposit/Withdrawal/Advisory Fee rows have no security, shares or price",0,101597,0.0,,
+DQ340,2-Single-table,ERROR,PASS,fact_transactions,amount,amount = |shares| × price (±$0.01) for trades,0,197175,0.0,,
+DQ366,3-Referential,ERROR,PASS,dim_client,advisor_id,dim_client.advisor_id → dim_advisor.advisor_id exists,0,2525,0.0,,compared after trimming and '45.0'→'45'
+DQ367,3-Referential,ERROR,PASS,dim_security,benchmark_id,dim_security.benchmark_id → dim_benchmark.benchmark_id exists,0,500,0.0,,compared after trimming and '45.0'→'45'
+DQ368,3-Referential,ERROR,PASS,fact_fees,client_id,fact_fees.client_id → dim_client.client_id exists,0,122197,0.0,,compared after trimming and '45.0'→'45'
+DQ369,3-Referential,ERROR,PASS,fact_fees,advisor_id,fact_fees.advisor_id → dim_advisor.advisor_id exists,0,122197,0.0,,compared after trimming and '45.0'→'45'
+DQ378,3-Referential,ERROR,PASS,fact_fees,fee_date,fact_fees.fee_date → dim_date.date exists,0,122197,0.0,,compared after trimming and '45.0'→'45'
+DQ370,3-Referential,ERROR,PASS,fact_portfolio_snapshot,client_id,fact_portfolio_snapshot.client_id → dim_client.client_id exists,0,129547,0.0,,compared after trimming and '45.0'→'45'
+DQ371,3-Referential,ERROR,PASS,fact_portfolio_snapshot,advisor_id,fact_portfolio_snapshot.advisor_id → dim_advisor.advisor_id exists,0,129547,0.0,,compared after trimming and '45.0'→'45'
+DQ372,3-Referential,ERROR,PASS,fact_portfolio_snapshot,benchmark_id,fact_portfolio_snapshot.benchmark_id → dim_benchmark.benchmark_id exists,0,129547,0.0,,compared after trimming and '45.0'→'45'
+DQ379,3-Referential,ERROR,PASS,fact_portfolio_snapshot,snapshot_date,fact_portfolio_snapshot.snapshot_date → dim_date.date exists,0,129547,0.0,,compared after trimming and '45.0'→'45'
+DQ374,3-Referential,ERROR,PASS,fact_transactions,advisor_id,fact_transactions.advisor_id → dim_advisor.advisor_id exists,0,298772,0.0,,compared after trimming and '45.0'→'45'
+DQ375,3-Referential,ERROR,PASS,fact_transactions,security_id,fact_transactions.security_id → dim_security.security_id exists,0,197175,0.0,,compared after trimming and '45.0'→'45'
+DQ380,3-Referential,ERROR,PASS,fact_transactions,txn_date,fact_transactions.txn_date → dim_date.date exists,0,298772,0.0,,compared after trimming and '45.0'→'45'
+DQ345,4-Cross-table,ERROR,PASS,fact_fees,advisor_id,advisor_id agrees with dim_client.advisor_id,0,122197,0.0,,
+DQ355,4-Cross-table,ERROR,PASS,fact_fees,aum_basis,aum_basis equals snapshot AUM for the same client-month,0,122197,0.0,,
+DQ356,4-Cross-table,ERROR,PASS,fact_fees,client_id+fee_date,Every fee has a portfolio snapshot for that client-month,0,122197,0.0,,
+DQ344,4-Cross-table,ERROR,PASS,fact_portfolio_snapshot,advisor_id,advisor_id agrees with dim_client.advisor_id,0,129547,0.0,,
+DQ350,4-Cross-table,ERROR,PASS,fact_portfolio_snapshot,account_type,account_type agrees with dim_client.primary_account_type,0,129547,0.0,,
+DQ353,4-Cross-table,ERROR,PASS,fact_portfolio_snapshot,benchmark_id,One benchmark and one advisor per client over time,0,129547,0.0,,
+DQ354,4-Cross-table,ERROR,PASS,fact_portfolio_snapshot,benchmark_return_ytd,Same benchmark + date ⇒ same benchmark_return_ytd for every client,0,129547,0.0,,
+DQ346,4-Cross-table,ERROR,PASS,fact_transactions,advisor_id,advisor_id agrees with dim_client.advisor_id,0,298572,0.0,,
+DQ002,1-Column,WARN,PASS,dim_advisor,advisor_id,No leading/trailing/double/odd whitespace,0,25,0.0,,
+DQ005,1-Column,WARN,PASS,dim_advisor,first_name,No leading/trailing/double/odd whitespace,0,25,0.0,,
+DQ006,1-Column,WARN,PASS,dim_advisor,first_name,No literal null tokens (None/NULL/NA/...),0,25,0.0,,
+DQ008,1-Column,WARN,PASS,dim_advisor,last_name,No leading/trailing/double/odd whitespace,0,25,0.0,,
+DQ009,1-Column,WARN,PASS,dim_advisor,last_name,No literal null tokens (None/NULL/NA/...),0,25,0.0,,
+DQ011,1-Column,WARN,PASS,dim_advisor,region,No leading/trailing/double/odd whitespace,0,25,0.0,,
+DQ012,1-Column,WARN,PASS,dim_advisor,region,No literal null tokens (None/NULL/NA/...),0,25,0.0,,
+DQ015,1-Column,WARN,PASS,dim_advisor,years_experience,No leading/trailing/double/odd whitespace,0,25,0.0,,
+DQ016,1-Column,WARN,PASS,dim_advisor,years_experience,No literal null tokens (None/NULL/NA/...),0,25,0.0,,
+DQ019,1-Column,WARN,PASS,dim_advisor,aum_target_mm,No leading/trailing/double/odd whitespace,0,25,0.0,,
+DQ020,1-Column,WARN,PASS,dim_advisor,aum_target_mm,No literal null tokens (None/NULL/NA/...),0,25,0.0,,
+DQ022,1-Column,WARN,PASS,dim_advisor,certifications,No leading/trailing/double/odd whitespace,0,25,0.0,,
+DQ026,1-Column,WARN,PASS,dim_benchmark,benchmark_id,No leading/trailing/double/odd whitespace,0,8,0.0,,
+DQ029,1-Column,WARN,PASS,dim_benchmark,name,No leading/trailing/double/odd whitespace,0,8,0.0,,
+DQ030,1-Column,WARN,PASS,dim_benchmark,name,No literal null tokens (None/NULL/NA/...),0,8,0.0,,
+DQ032,1-Column,WARN,PASS,dim_benchmark,asset_class,No leading/trailing/double/odd whitespace,0,8,0.0,,
+DQ033,1-Column,WARN,PASS,dim_benchmark,asset_class,No literal null tokens (None/NULL/NA/...),0,8,0.0,,
+DQ035,1-Column,WARN,PASS,dim_benchmark,ticker_proxy,No leading/trailing/double/odd whitespace,0,8,0.0,,
+DQ036,1-Column,WARN,PASS,dim_benchmark,ticker_proxy,No literal null tokens (None/NULL/NA/...),0,8,0.0,,
+DQ039,1-Column,WARN,PASS,dim_client,client_id,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ042,1-Column,WARN,PASS,dim_client,first_name,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ043,1-Column,WARN,PASS,dim_client,first_name,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ045,1-Column,WARN,PASS,dim_client,last_name,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ046,1-Column,WARN,PASS,dim_client,last_name,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ049,1-Column,WARN,PASS,dim_client,age,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ050,1-Column,WARN,PASS,dim_client,age,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ052,1-Column,WARN,PASS,dim_client,city,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ053,1-Column,WARN,PASS,dim_client,state,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ054,1-Column,WARN,PASS,dim_client,state,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ057,1-Column,WARN,PASS,dim_client,zip_code,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ058,1-Column,WARN,PASS,dim_client,zip_code,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ061,1-Column,WARN,PASS,dim_client,risk_profile,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ062,1-Column,WARN,PASS,dim_client,risk_profile,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ065,1-Column,WARN,PASS,dim_client,client_tier,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ066,1-Column,WARN,PASS,dim_client,client_tier,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ068,1-Column,WARN,PASS,dim_client,primary_account_type,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ069,1-Column,WARN,PASS,dim_client,primary_account_type,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ072,1-Column,WARN,PASS,dim_client,initial_aum,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ073,1-Column,WARN,PASS,dim_client,initial_aum,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ076,1-Column,WARN,PASS,dim_client,client_since,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ077,1-Column,WARN,PASS,dim_client,client_since,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ080,1-Column,WARN,PASS,dim_client,advisor_id,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ081,1-Column,WARN,PASS,dim_client,advisor_id,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ084,1-Column,WARN,PASS,dim_client,is_active,No leading/trailing/double/odd whitespace,0,2525,0.0,,
+DQ085,1-Column,WARN,PASS,dim_client,is_active,No literal null tokens (None/NULL/NA/...),0,2525,0.0,,
+DQ088,1-Column,WARN,PASS,dim_date,date_id,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ092,1-Column,WARN,PASS,dim_date,date,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ093,1-Column,WARN,PASS,dim_date,date,No literal null tokens (None/NULL/NA/...),0,1827,0.0,,
+DQ096,1-Column,WARN,PASS,dim_date,year,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ097,1-Column,WARN,PASS,dim_date,year,No literal null tokens (None/NULL/NA/...),0,1827,0.0,,
+DQ100,1-Column,WARN,PASS,dim_date,quarter,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ101,1-Column,WARN,PASS,dim_date,quarter,No literal null tokens (None/NULL/NA/...),0,1827,0.0,,
+DQ104,1-Column,WARN,PASS,dim_date,month,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ105,1-Column,WARN,PASS,dim_date,month,No literal null tokens (None/NULL/NA/...),0,1827,0.0,,
+DQ107,1-Column,WARN,PASS,dim_date,month_name,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ108,1-Column,WARN,PASS,dim_date,month_name,No literal null tokens (None/NULL/NA/...),0,1827,0.0,,
+DQ111,1-Column,WARN,PASS,dim_date,week_of_year,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ112,1-Column,WARN,PASS,dim_date,week_of_year,No literal null tokens (None/NULL/NA/...),0,1827,0.0,,
+DQ114,1-Column,WARN,PASS,dim_date,day_of_week,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ115,1-Column,WARN,PASS,dim_date,day_of_week,No literal null tokens (None/NULL/NA/...),0,1827,0.0,,
+DQ118,1-Column,WARN,PASS,dim_date,is_month_end,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ119,1-Column,WARN,PASS,dim_date,is_month_end,No literal null tokens (None/NULL/NA/...),0,1827,0.0,,
+DQ122,1-Column,WARN,PASS,dim_date,is_quarter_end,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ123,1-Column,WARN,PASS,dim_date,is_quarter_end,No literal null tokens (None/NULL/NA/...),0,1827,0.0,,
+DQ126,1-Column,WARN,PASS,dim_date,is_year_end,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ127,1-Column,WARN,PASS,dim_date,is_year_end,No literal null tokens (None/NULL/NA/...),0,1827,0.0,,
+DQ130,1-Column,WARN,PASS,dim_date,is_trading_day,No leading/trailing/double/odd whitespace,0,1827,0.0,,
+DQ131,1-Column,WARN,PASS,dim_date,is_trading_day,No literal null tokens (None/NULL/NA/...),0,1827,0.0,,
+DQ134,1-Column,WARN,PASS,dim_security,security_id,No leading/trailing/double/odd whitespace,0,500,0.0,,
+DQ137,1-Column,WARN,PASS,dim_security,ticker,No leading/trailing/double/odd whitespace,0,500,0.0,,
+DQ138,1-Column,WARN,PASS,dim_security,ticker,No literal null tokens (None/NULL/NA/...),0,500,0.0,,
+DQ141,1-Column,WARN,PASS,dim_security,name,No leading/trailing/double/odd whitespace,0,500,0.0,,
+DQ142,1-Column,WARN,PASS,dim_security,name,No literal null tokens (None/NULL/NA/...),0,500,0.0,,
+DQ144,1-Column,WARN,PASS,dim_security,asset_class,No leading/trailing/double/odd whitespace,0,500,0.0,,
+DQ145,1-Column,WARN,PASS,dim_security,asset_class,No literal null tokens (None/NULL/NA/...),0,500,0.0,,
+DQ147,1-Column,WARN,PASS,dim_security,sector,No leading/trailing/double/odd whitespace,0,500,0.0,,
+DQ148,1-Column,WARN,PASS,dim_security,sector,No literal null tokens (None/NULL/NA/...),0,500,0.0,,
+DQ152,1-Column,WARN,PASS,dim_security,benchmark_id,No leading/trailing/double/odd whitespace,0,500,0.0,,
+DQ153,1-Column,WARN,PASS,dim_security,benchmark_id,No literal null tokens (None/NULL/NA/...),0,500,0.0,,
+DQ156,1-Column,WARN,PASS,dim_security,is_etf,No leading/trailing/double/odd whitespace,0,500,0.0,,
+DQ157,1-Column,WARN,PASS,dim_security,is_etf,No literal null tokens (None/NULL/NA/...),0,500,0.0,,
+DQ160,1-Column,WARN,PASS,dim_security,expense_ratio_bps,No leading/trailing/double/odd whitespace,0,500,0.0,,
+DQ161,1-Column,WARN,PASS,dim_security,expense_ratio_bps,No literal null tokens (None/NULL/NA/...),0,500,0.0,,
+DQ165,1-Column,WARN,PASS,fact_fees,fee_id,No leading/trailing/double/odd whitespace,0,122197,0.0,,
+DQ169,1-Column,WARN,PASS,fact_fees,client_id,No leading/trailing/double/odd whitespace,0,122197,0.0,,
+DQ170,1-Column,WARN,PASS,fact_fees,client_id,No literal null tokens (None/NULL/NA/...),0,122197,0.0,,
+DQ173,1-Column,WARN,PASS,fact_fees,advisor_id,No leading/trailing/double/odd whitespace,0,122197,0.0,,
+DQ174,1-Column,WARN,PASS,fact_fees,advisor_id,No literal null tokens (None/NULL/NA/...),0,122197,0.0,,
+DQ177,1-Column,WARN,PASS,fact_fees,fee_date,No leading/trailing/double/odd whitespace,0,122197,0.0,,
+DQ178,1-Column,WARN,PASS,fact_fees,fee_date,No literal null tokens (None/NULL/NA/...),0,122197,0.0,,
+DQ181,1-Column,WARN,PASS,fact_fees,fee_type,No leading/trailing/double/odd whitespace,0,122197,0.0,,
+DQ182,1-Column,WARN,PASS,fact_fees,fee_type,No literal null tokens (None/NULL/NA/...),0,122197,0.0,,
+DQ185,1-Column,WARN,PASS,fact_fees,aum_basis,No leading/trailing/double/odd whitespace,0,122197,0.0,,
+DQ186,1-Column,WARN,PASS,fact_fees,aum_basis,No literal null tokens (None/NULL/NA/...),0,122197,0.0,,
+DQ189,1-Column,WARN,PASS,fact_fees,bps_charged,No leading/trailing/double/odd whitespace,0,122197,0.0,,
+DQ190,1-Column,WARN,PASS,fact_fees,bps_charged,No literal null tokens (None/NULL/NA/...),0,122197,0.0,,
+DQ193,1-Column,WARN,PASS,fact_fees,amount,No leading/trailing/double/odd whitespace,0,122197,0.0,,
+DQ194,1-Column,WARN,PASS,fact_fees,amount,No literal null tokens (None/NULL/NA/...),0,122197,0.0,,
+DQ198,1-Column,WARN,PASS,fact_portfolio_snapshot,snapshot_id,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ202,1-Column,WARN,PASS,fact_portfolio_snapshot,client_id,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ203,1-Column,WARN,PASS,fact_portfolio_snapshot,client_id,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ206,1-Column,WARN,PASS,fact_portfolio_snapshot,advisor_id,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ207,1-Column,WARN,PASS,fact_portfolio_snapshot,advisor_id,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ210,1-Column,WARN,PASS,fact_portfolio_snapshot,benchmark_id,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ211,1-Column,WARN,PASS,fact_portfolio_snapshot,benchmark_id,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ214,1-Column,WARN,PASS,fact_portfolio_snapshot,snapshot_date,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ215,1-Column,WARN,PASS,fact_portfolio_snapshot,snapshot_date,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ219,1-Column,WARN,PASS,fact_portfolio_snapshot,year,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ220,1-Column,WARN,PASS,fact_portfolio_snapshot,year,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ223,1-Column,WARN,PASS,fact_portfolio_snapshot,month,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ224,1-Column,WARN,PASS,fact_portfolio_snapshot,month,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ227,1-Column,WARN,PASS,fact_portfolio_snapshot,aum,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ228,1-Column,WARN,PASS,fact_portfolio_snapshot,aum,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ232,1-Column,WARN,PASS,fact_portfolio_snapshot,return_ytd,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ233,1-Column,WARN,PASS,fact_portfolio_snapshot,return_ytd,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ236,1-Column,WARN,PASS,fact_portfolio_snapshot,benchmark_return_ytd,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ237,1-Column,WARN,PASS,fact_portfolio_snapshot,benchmark_return_ytd,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ240,1-Column,WARN,PASS,fact_portfolio_snapshot,active_alpha_ytd,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ241,1-Column,WARN,PASS,fact_portfolio_snapshot,active_alpha_ytd,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ243,1-Column,WARN,PASS,fact_portfolio_snapshot,cash_pct,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ244,1-Column,WARN,PASS,fact_portfolio_snapshot,cash_pct,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ246,1-Column,WARN,PASS,fact_portfolio_snapshot,account_type,No leading/trailing/double/odd whitespace,0,129547,0.0,,
+DQ247,1-Column,WARN,PASS,fact_portfolio_snapshot,account_type,No literal null tokens (None/NULL/NA/...),0,129547,0.0,,
+DQ250,1-Column,WARN,PASS,fact_transactions,txn_id,No leading/trailing/double/odd whitespace,0,298772,0.0,,
+DQ254,1-Column,WARN,PASS,fact_transactions,client_id,No leading/trailing/double/odd whitespace,0,298772,0.0,,
+DQ255,1-Column,WARN,PASS,fact_transactions,client_id,No literal null tokens (None/NULL/NA/...),0,298772,0.0,,
+DQ258,1-Column,WARN,PASS,fact_transactions,advisor_id,No leading/trailing/double/odd whitespace,0,298772,0.0,,
+DQ259,1-Column,WARN,PASS,fact_transactions,advisor_id,No literal null tokens (None/NULL/NA/...),0,298772,0.0,,
+DQ262,1-Column,WARN,PASS,fact_transactions,security_id,No leading/trailing/double/odd whitespace,0,298772,0.0,,
+DQ263,1-Column,WARN,PASS,fact_transactions,security_id,No literal null tokens (None/NULL/NA/...),0,298772,0.0,,
+DQ266,1-Column,WARN,PASS,fact_transactions,txn_date,No leading/trailing/double/odd whitespace,0,298772,0.0,,
+DQ267,1-Column,WARN,PASS,fact_transactions,txn_date,No literal null tokens (None/NULL/NA/...),0,298772,0.0,,
+DQ270,1-Column,WARN,PASS,fact_transactions,txn_type,No leading/trailing/double/odd whitespace,0,298772,0.0,,
+DQ271,1-Column,WARN,PASS,fact_transactions,txn_type,No literal null tokens (None/NULL/NA/...),0,298772,0.0,,
+DQ274,1-Column,WARN,PASS,fact_transactions,shares,No leading/trailing/double/odd whitespace,0,298772,0.0,,
+DQ275,1-Column,WARN,PASS,fact_transactions,shares,No literal null tokens (None/NULL/NA/...),0,298772,0.0,,
+DQ278,1-Column,WARN,PASS,fact_transactions,price,No leading/trailing/double/odd whitespace,0,298772,0.0,,
+DQ279,1-Column,WARN,PASS,fact_transactions,price,No literal null tokens (None/NULL/NA/...),0,298772,0.0,,
+DQ283,1-Column,WARN,PASS,fact_transactions,amount,No leading/trailing/double/odd whitespace,0,298772,0.0,,
+DQ284,1-Column,WARN,PASS,fact_transactions,amount,No literal null tokens (None/NULL/NA/...),0,298772,0.0,,
+DQ294,2-Single-table,WARN,PASS,dim_advisor,*,No duplicate rows ignoring advisor_id (trim/case-insensitive),0,25,0.0,,
+DQ295,2-Single-table,WARN,PASS,dim_advisor,*,No near-duplicate rows (same on all but one column),0,25,0.0,,differing column -> rows: 
+DQ297,2-Single-table,WARN,PASS,dim_benchmark,*,No duplicate rows ignoring benchmark_id (trim/case-insensitive),0,8,0.0,,
+DQ299,2-Single-table,WARN,PASS,dim_client,*,No duplicate rows ignoring client_id (trim/case-insensitive),0,2525,0.0,,
+DQ317,2-Single-table,WARN,PASS,dim_client,client_tier+initial_aum,"Tier agrees with initial AUM (Retail <$500k, HNW $500k–$5M, UHNW ≥$5M)",0,2525,0.0,,
+DQ318,2-Single-table,WARN,PASS,dim_client,age+client_since,Client was ≥18 when the relationship started,0,2525,0.0,,
+DQ302,2-Single-table,WARN,PASS,dim_date,*,No duplicate rows ignoring date_id (trim/case-insensitive),0,1827,0.0,,
+DQ303,2-Single-table,WARN,PASS,dim_date,*,No near-duplicate rows (same on all but one column),0,1827,0.0,,differing column -> rows: 
+DQ305,2-Single-table,WARN,PASS,dim_security,*,No duplicate rows ignoring security_id (trim/case-insensitive),0,500,0.0,,
+DQ306,2-Single-table,WARN,PASS,dim_security,*,No near-duplicate rows (same on all but one column),0,500,0.0,,differing column -> rows: 
+DQ308,2-Single-table,WARN,PASS,fact_fees,*,No duplicate rows ignoring fee_id (trim/case-insensitive),0,122197,0.0,,
+DQ329,2-Single-table,WARN,PASS,fact_fees,fee_date,Fees are charged on the 1st of the month,0,122197,0.0,,
+DQ311,2-Single-table,WARN,PASS,fact_portfolio_snapshot,*,No duplicate rows ignoring snapshot_id (trim/case-insensitive),0,129547,0.0,,
+DQ312,2-Single-table,WARN,PASS,fact_portfolio_snapshot,*,No near-duplicate rows (same on all but one column),0,129547,0.0,,differing column -> rows: 
+DQ335,2-Single-table,WARN,PASS,fact_portfolio_snapshot,snapshot_date,Snapshots are dated the 1st of the month,0,129547,0.0,,
+DQ314,2-Single-table,WARN,PASS,fact_transactions,*,No duplicate rows ignoring txn_id (trim/case-insensitive),0,298772,0.0,,
+DQ363,4-Cross-table,WARN,PASS,dim_client,is_active,Active clients have a snapshot in the latest month,0,2325,0.0,,
+DQ348,4-Cross-table,WARN,PASS,fact_fees,fee_date,Activity is not dated before dim_client.client_since (same month allowed),0,122197,0.0,,
+DQ347,4-Cross-table,WARN,PASS,fact_portfolio_snapshot,snapshot_date,Activity is not dated before dim_client.client_since (same month allowed),0,129547,0.0,,
+DQ351,4-Cross-table,WARN,PASS,fact_portfolio_snapshot,benchmark_id,"Benchmark matches the client's risk profile (Aggr→S&P 500, Bal→60/40, Cons→Conservative Blend)",0,125605,0.0,,
+DQ349,4-Cross-table,WARN,PASS,fact_transactions,txn_date,Activity is not dated before dim_client.client_since (same month allowed),0,298572,0.0,,
+DQ343,2-Single-table,INFO,PASS,fact_transactions,txn_id+client_id+txn_date+txn_type+amount,"No two transactions share client, date, type and amount",0,298772,0.0,,
+DQ381,3-Referential,INFO,PASS,dim_advisor,advisor_id,Every dim_advisor row is used by a fact table,0,25,0.0,,"referenced from fact_fees.advisor_id, fact_portfolio_snapshot.advisor_id, fact_transactions.advisor_id"
+DQ384,3-Referential,INFO,PASS,dim_security,security_id,Every dim_security row is used by a fact table,0,500,0.0,,referenced from fact_transactions.security_id
