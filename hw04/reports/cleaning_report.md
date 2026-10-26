@@ -1,7 +1,7 @@
 # Wildcat Capital — Data Cleaning Report
 
 **For:** Portfolio Committee · **Scope:** 8 tables, 2020–2024 (clients, advisors, securities, benchmarks, calendar, monthly snapshots, fees, transactions)
-**Sources:** `decision_log.md` (19 decisions) and `reports/data_quality_scorecard.csv`
+**Sources:** `decision_log.md` and `reports/data_quality_scorecard.csv`
 
 ## Executive summary
 
