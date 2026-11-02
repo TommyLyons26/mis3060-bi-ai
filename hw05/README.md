@@ -47,6 +47,23 @@ hw05/
 | fact_portfolio_snapshot | Fact | 129,547 |
 | fact_transactions | Fact | 298,572 |
 
+## How to run the uniqueness check (Part B)
+
+Requires Python 3 with pandas. In Terminal, go to the hw05 folder and run the three commands below. Each checks that a fact table's grain columns never repeat, and should print 0.
+
+```bash
+cd ~/Desktop/"MIS 3060"/mis3060-bi-ai/hw05
+python3 -c "import pandas as pd; f = pd.read_csv('Wildcat Capital Clean/fact_fees.csv'); print(f.duplicated(['client_id', 'fee_date']).sum())"
+python3 -c "import pandas as pd; s = pd.read_csv('Wildcat Capital Clean/fact_portfolio_snapshot.csv'); print(s.duplicated(['client_id', 'snapshot_date']).sum())"
+python3 -c "import pandas as pd; t = pd.read_csv('Wildcat Capital Clean/fact_transactions.csv'); print(t['txn_id'].duplicated().sum())"
+```
+
+| Command | Checks | Expected |
+|---|---|---|
+| 1 | fact_fees: client_id + fee_date is unique | 0 |
+| 2 | fact_portfolio_snapshot: client_id + snapshot_date is unique | 0 |
+| 3 | fact_transactions: txn_id is unique | 0 |
+
 ## Power BI model (Part D)
 
 - Built in Power BI Desktop on Apporto. The CSVs were loaded with Get Data → Text/CSV, and the column types were set in Power Query.

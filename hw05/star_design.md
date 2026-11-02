@@ -25,6 +25,25 @@
 - **fact_portfolio_snapshot:** One row represents one client's portfolio position (AUM and returns) as of one month-start date.
 - **fact_transactions:** One row represents one individual transaction (buy, sell, dividend, deposit, withdrawal or advisory fee) made in one client's account on one date.
 
+### Uniqueness check
+
+Each grain is confirmed by checking that the columns defining it never repeat. Every check prints 0 (no duplicates):
+
+| Fact table | Columns checked | Rows | Duplicates |
+|---|---|---|---|
+| fact_fees | client_id + fee_date | 122,197 | 0 |
+| fact_portfolio_snapshot | client_id + snapshot_date | 129,547 | 0 |
+| fact_transactions | txn_id | 298,572 | 0 |
+
+Run from the hw05 folder in Terminal:
+
+```bash
+cd ~/Desktop/"MIS 3060"/mis3060-bi-ai/hw05
+python3 -c "import pandas as pd; f = pd.read_csv('Wildcat Capital Clean/fact_fees.csv'); print(f.duplicated(['client_id', 'fee_date']).sum())"
+python3 -c "import pandas as pd; s = pd.read_csv('Wildcat Capital Clean/fact_portfolio_snapshot.csv'); print(s.duplicated(['client_id', 'snapshot_date']).sum())"
+python3 -c "import pandas as pd; t = pd.read_csv('Wildcat Capital Clean/fact_transactions.csv'); print(t['txn_id'].duplicated().sum())"
+```
+
 ## Part C — Measures
 
 | Table | Column | Type | What it means for summing/averaging (with a simple example) |
