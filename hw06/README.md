@@ -31,4 +31,9 @@ python scripts/01_reconcile_measures.py
 
 **Cause:** this was a manual input error in my Power BI measure. I multiplied by **1,000 instead of 10,000** when converting to basis points. One basis point is 0.01% (1/10,000), so the correct multiplier is 10,000. The source data confirms the pandas figure is the realistic one: `bps_charged` in `fact_fees.csv` sits around 65 bps, so an annualized fee yield of about 43 bps makes sense and 4.3 bps does not.
 
+**Fix:**
+1. In Power BI, I changed the multiplier in `Fee Yield (bps)` from `1000` to `10000`.
+2. I re-ran the DAX queries and re-exported the values to `reports/powerbi_values.csv`.
+3. I re-ran `scripts/01_reconcile_measures.py`. **Result: 88 of 88 rows match.**
 
+The pandas script did not need any change. The Git history shows both versions: the commit with the bug (79/88) and the commit with the fix (88/88).
