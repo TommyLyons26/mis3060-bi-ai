@@ -179,4 +179,81 @@ RETURN DIVIDE ( CALCULATE ( [Ending AUM], Top10 ), [Ending AUM] )
 **Pattern:** Recompute-and-weight — Ending AUM of the 10 largest clients in the current filter divided by Ending AUM of all clients in that filter.
 **Meaning:** How dependent Wildcat (or a tier) is on its biggest clients, a measure of concentration risk.
 
+# Part C
 
+## (a) Ending AUM vs. SUMX over clients
+
+| Measure (no filters) | Value |
+|---|---|
+| `Ending AUM` | $12,729,572,078.86 |
+| `SUMX ( VALUES ( dim_client[client_id] ), [Ending AUM] )` | $13,149,297,713.80 |
+| **Difference** | **$419,725,634.94** |
+
+With no filters applied, `Ending AUM` finds the latest snapshot date in the whole dataset (December 2024) and sums the AUM of the 2,325 clients in that snapshot.
+
+The SUMX version iterates over all 2,500 clients. Context transition filters `[Ending AUM]` to one client at a time, so "latest snapshot" becomes *that client's* last snapshot rather than the firm's. Current clients still return their December 2024 balance, but clients who have left return their final balance from the month they departed, so SUMX adds money the firm no longer holds.
+
+**Where the $419.7M comes from.** Checked against `dim_client[is_active]`:
+
+```DAX
+EVALUATE
+ROW (
+    "Inactive clients", CALCULATE ( COUNTROWS ( dim_client ), dim_client[is_active] = FALSE () ),
+    "Their last AUM",   CALCULATE ( SUMX ( VALUES ( dim_client[client_id] ), [Ending AUM] ),
+                                    dim_client[is_active] = FALSE () )
+)
+```
+
+This returns 175 inactive clients with a combined last-known AUM of $419,725,634.94, exactly the gap between the two measures. These clients do not appear in the December 2024 snapshot, so `Ending AUM` excludes them while the SUMX version still counts their final balances.
+
+**Which answers "How much do we manage today?"** `Ending AUM` ($12.73B). It counts only money the firm actually holds at the latest date. The SUMX total mixes balances from different dates and includes $419.7M from departed clients, overstating current AUM by about 3.3%.
+
+## (b) Fee Yield vs. ICE 9 Effective Fee Rate (2024)
+
+| 2024 | Denominator | Value |
+|---|---|---|
+| `Fee Yield (bps)` | `SUM(fact_portfolio_snapshot[aum])` = $135,459,843,783.73 | **43.15 bps** |
+| `Effective Fee Rate (bps)` | `SUM(fact_fees[aum_basis])` = $128,385,303,527.10 | **45.53 bps** |
+
+Both use the same numerator, 2024 `[Total Fees]` = $48,714,005.93, and the same ×12 ×10,000 scaling. Only the denominator differs.
+
+**Cause (found in pandas).** In 2024, `fact_portfolio_snapshot` has 27,900 client-months but `fact_fees` has only 26,216. That leaves **1,684 client-months that appear in the snapshot table (with a balance) but have no row at all in `fact_fees`**. For the 26,216 client-months that appear in both tables, `aum_basis` equals the snapshot `aum` exactly, so the tables agree on balances and the fees table is simply missing rows. The 1,684 missing client-months hold **$7,074,540,256.63** of AUM, which is exactly the gap between the two denominators ($135.46B − $128.39B).
+
+Fee Yield divides fees by all AUM, including AUM that has no fee record. Effective Fee Rate divides only by AUM that has a fee row, so its denominator is smaller and the rate is higher.
+
+**Data limitation.** Fee records are incomplete: about 6% of 2024 client-months have a balance but no fee row. The gaps are spread across 1,082 clients. The data can't tell us whether those fees were waived (truly zero) or never recorded:
+- **If waived,** Fee Yield (43.15 bps) is the true firm-wide yield and Effective Fee Rate overstates it.
+- **If missing,** Fee Yield understates the real rate.
+
+Either way, neither number can be fully trusted until the missing fee rows are explained.
+
+## (c) AUM-Weighted Alpha: last snapshot only, suspects excluded
+
+| Version (no filters, December 2024 snapshot) | Value |
+|---|---|
+| `AUM-Weighted Alpha`, suspects excluded (2,177 rows) | **1.448%** (0.014480) |
+| Simple mean of `active_alpha_ytd`, same 2,177 rows | **0.879%** (0.008788) |
+| AUM-weighted, suspects included (2,325 rows) | **1.668%** (0.016678) |
+
+**Why the last snapshot only.** `active_alpha_ytd` is a year-to-date running total that resets every January. Each month's value means "how far ahead of the benchmark the client is so far this year". So only the December snapshot holds the complete full-year figure, and every earlier month is an incomplete, partial-year number. Client 1 shows this: their alpha resets to −0.15% after January 2024 and builds to +1.61% by December 2024, which is their full 2024 result. Averaging all 12 of client 1's 2024 values gives only about +0.19%, because the early months drag it down.
+
+**Why exclude `is_return_suspect = 1`.** The 148 suspect rows in the last snapshot have impossible returns. Their alphas range from −121% to +7,134%, while every clean row falls between −50% and +50%. These are data errors, not real performance. Most are small accounts, but including them still pushes the weighted alpha from 1.45% to 1.67%, a 0.22 percentage point distortion from broken data.
+
+**Weighted vs. simple mean.** The simple mean (0.88%) gives a $5,000 account the same say as a $40M account, so it shows how the typical client did. Weighting by AUM (1.45%) shows how the firm's money performed, which is what matters for the firm's results. Because the weighted figure is higher, larger accounts outperformed smaller ones.
+
+## (d) Organic Growth Rate by client tier (2024)
+
+| Tier | AUM YoY % | Organic Growth Rate | Other growth (YoY − Organic) | Net new money | Share of firm net new money |
+|---|---|---|---|---|---|
+| Retail | 19.13% | **9.87%** | 9.26% | $44,184,047.61 | **57.0%** |
+| HNW | 19.64% | 1.18% | 18.46% | $25,227,406.26 | 32.5% |
+| UHNW | 19.59% | **0.10%** | 19.49% | $8,101,601.39 | 10.5% |
+
+**What it says.** All three tiers grew by roughly the same amount in 2024, about 19–20% YoY, but for very different reasons. UHNW's growth came almost entirely from sources other than new money: clients added only 0.10% in net flows, and the remaining 19.49 percentage points came mainly from investment returns. HNW is similar, with 1.18% organic and 18.46% other growth. Retail is the only tier bringing in substantial new money, with 9.87% organic growth and 57.0% of the firm's net new money. Outside Retail, Wildcat's growth was driven mostly by the market rather than by new money.
+
+**What it does not tell you.**
+1. **Scale.** Organic Growth is a percentage, so it hides size. Retail has the highest rate and the largest share of new money, but it is the smallest tier, so a large percentage can still be a small dollar amount.
+2. **What the "other" growth is.** YoY minus Organic is a residual. It mixes market returns with fees deducted and clients joining, leaving or changing tier, and the measure cannot separate them.
+3. **Where the new money came from.** Net flows don't show whether money came from new clients or existing ones topping up, or from many small deposits or a few large ones.
+4. **Profitability.** Different tiers pay different fee rates, so a dollar of growth is worth more in some tiers than others. Organic Growth treats every dollar the same.
+5. **Durability.** Market-driven growth can reverse in a down year. Only organic growth reflects clients choosing to give Wildcat more money.
