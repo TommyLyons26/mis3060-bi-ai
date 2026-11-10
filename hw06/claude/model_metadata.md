@@ -114,3 +114,5 @@ fact_fees	fee_date	Many	dim_date	date	One	true	OneDirection
 dim_client	client_since	Many	LocalDateTable_976ce71a-eea0-49bb-b089-dd421adaa4b8	date	One	true	OneDirection
 dim_date	date	Many	LocalDateTable_30b0d5f8-768e-4d2a-9562-888fa2f9b2e7	date	One	true	OneDirection
 dim_security	benchmark_id	Many	dim_benchmark	benchmark_id	One	true	OneDirection
+
+Note: Only the columns and relationships exports are included. The third export, INFO.VIEW.MEASURES(), was deliberately left out because it would have shown Claude my existing Top 10 Client Share measure. Withholding it meant Claude had to build the measure from the model structure and the business definition alone.

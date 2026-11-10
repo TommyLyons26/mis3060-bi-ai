@@ -2,7 +2,7 @@
 
 **Did it run as written?**
 
-Yes. The measure in `claude/dax_session.md` (lines 26–47) was added to the Power BI model as `TOP 10 CLIENT SHARE 2`, exactly as written, and ran without errors. Its test query also ran as written in DAX query view.
+Yes. The measure in `claude/dax_session.md` (lines 36–57) was added to the Power BI model as `TOP 10 CLIENT SHARE 2`, exactly as written, and ran without errors. Its test query also ran as written in DAX query view.
 
 **What did the test query return?**
 
